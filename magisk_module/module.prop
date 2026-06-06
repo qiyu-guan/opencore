@@ -1,0 +1,6 @@
+id=opencore
+name=OpenCore
+version=v1.0
+versionCode=1
+author=OpenCore
+description=System enhancement module with native injection
