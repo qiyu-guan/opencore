@@ -27,15 +27,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_settings"
-        android:layout_marginTop="32dp"
-        style="@style/Widget.Material3.Button"/>
+        android:layout_marginTop="32dp"/>
 
     <Button
         android:id="@+id/btnLogs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/btn_logs"
-        android:layout_marginTop="16dp"
-        style="@style/Widget.Material3.Button.Tonal"/>
+        android:layout_marginTop="16dp"/>
 
 </LinearLayout>
