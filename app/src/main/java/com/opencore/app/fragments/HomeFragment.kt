@@ -50,7 +50,6 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 初始化视图
         tvEngineLoad = view.findViewById(R.id.tvEngineLoad)
         tvServiceStatus = view.findViewById(R.id.tvServiceStatus)
         tvKprobeStatus = view.findViewById(R.id.tvKprobeStatus)
@@ -94,7 +93,7 @@ class HomeFragment : Fragment() {
         updateRunnable = object : Runnable {
             override fun run() {
                 updateRealtimeData()
-                handler.postDelayed(this, 2000) // 每2秒更新一次
+                handler.postDelayed(this, 2000)
             }
         }
         handler.post(updateRunnable!!)
@@ -135,26 +134,27 @@ class HomeFragment : Fragment() {
         scope.launch {
             val mode = getCurrentMode()
             withContext(Dispatchers.Main) {
-                // 重置所有样式
-                modeMount.setBackgroundResource(R.drawable.bg_mode_inactive)
-                modeKernel.setBackgroundResource(R.drawable.bg_mode_inactive)
-                modeMagisk.setBackgroundResource(R.drawable.bg_mode_inactive)
+                val inactiveBg = context?.let { it.getDrawable(R.drawable.bg_mode_inactive) }
+                val activeBg = context?.let { it.getDrawable(R.drawable.bg_mode_active) }
+                
+                modeMount.background = inactiveBg
+                modeKernel.background = inactiveBg
+                modeMagisk.background = inactiveBg
                 modeMount.setTextColor(resources.getColor(R.color.text_secondary, null))
                 modeKernel.setTextColor(resources.getColor(R.color.text_secondary, null))
                 modeMagisk.setTextColor(resources.getColor(R.color.text_secondary, null))
 
-                // 高亮当前模式
                 when (mode) {
                     0 -> {
-                        modeMount.setBackgroundResource(R.drawable.bg_mode_active)
+                        modeMount.background = activeBg
                         modeMount.setTextColor(resources.getColor(android.R.color.white, null))
                     }
                     1 -> {
-                        modeKernel.setBackgroundResource(R.drawable.bg_mode_active)
+                        modeKernel.background = activeBg
                         modeKernel.setTextColor(resources.getColor(android.R.color.white, null))
                     }
                     2 -> {
-                        modeMagisk.setBackgroundResource(R.drawable.bg_mode_active)
+                        modeMagisk.background = activeBg
                         modeMagisk.setTextColor(resources.getColor(android.R.color.white, null))
                     }
                 }

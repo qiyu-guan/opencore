@@ -37,7 +37,9 @@ class ModulesFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(context)
 
         scope.launch {
-            val modules = getModulesList()
+            // Native 返回 Array，转换为 List
+            val modulesArray = getModulesList()
+            val modules = modulesArray.toList()
             withContext(Dispatchers.Main) {
                 recyclerView.adapter = ModulesAdapter(modules)
             }
