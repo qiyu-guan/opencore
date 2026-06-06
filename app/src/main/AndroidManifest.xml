@@ -19,6 +19,5 @@
             </intent-filter>
         </activity>
         <activity android:name=".SettingsActivity" />
-        <activity android:name=".LogActivity" />
     </application>
 </manifest>
