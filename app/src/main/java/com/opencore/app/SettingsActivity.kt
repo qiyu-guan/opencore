@@ -1,8 +1,5 @@
 package com.opencore.app
 
-import android.content.Context
-import android.content.SharedPreferences
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +13,7 @@ import com.opencore.app.utils.LogHelper
 
 class SettingsActivity : AppCompatActivity() {
 
-    private lateinit var prefs: SharedPreferences
+    private lateinit var prefs: android.content.SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +51,6 @@ class SettingsActivity : AppCompatActivity() {
                 val newColor = getColor(selectedColorRes)
                 prefs.edit().putInt("theme_color", newColor).apply()
                 LogHelper.addLog("Settings", "主题颜色已更改")
-                // 重启 Activity 使主题生效
                 recreate()
             }
         }
