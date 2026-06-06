@@ -6,7 +6,7 @@ on:
     tags:
       - 'v*'
   schedule:
-    - cron: '0 0 * * 0'   # 每周自动构建，确保镜像更新
+    - cron: '0 0 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -31,7 +31,13 @@ jobs:
         run: |
           echo "y" | sdkmanager "ndk;25.1.8937393"
 
-      - name: Build with Gradle
+      - name: Install Gradle 8.2
+        run: |
+          wget https://services.gradle.org/distributions/gradle-8.2-bin.zip
+          unzip -q gradle-8.2-bin.zip
+          echo "$PWD/gradle-8.2/bin" >> $GITHUB_PATH
+
+      - name: Build APK and native libs
         run: gradle assembleRelease
 
       - name: Prepare Magisk module
