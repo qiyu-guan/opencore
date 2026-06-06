@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/dark_bg">
 
-    <!-- 主内容区域：左中右三栏 -->
+    <!-- 主内容区域 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/contentContainer"
         android:layout_width="0dp"
@@ -25,10 +25,9 @@
             android:layout_marginBottom="12dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/middleArea"
-            app:layout_constraintWidth_percent="0.35"
-            android:background="@drawable/bg_rounded_card" />
+            app:layout_constraintWidth_percent="0.35" />
 
-        <!-- 中间区域（日志/动态内容） -->
+        <!-- 中间区域 -->
         <FrameLayout
             android:id="@+id/middleArea"
             android:layout_width="0dp"
@@ -40,7 +39,6 @@
             app:layout_constraintStart_toEndOf="@id/homeFragmentContainer"
             app:layout_constraintEnd_toStartOf="@id/modulesFragmentContainer"
             app:layout_constraintWidth_percent="0.30"
-            android:background="@drawable/bg_rounded_card"
             android:visibility="gone" />
 
         <!-- 右侧模块面板 -->
@@ -53,8 +51,7 @@
             android:layout_marginBottom="12dp"
             app:layout_constraintStart_toEndOf="@id/middleArea"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintWidth_percent="0.35"
-            android:background="@drawable/bg_rounded_card" />
+            app:layout_constraintWidth_percent="0.35" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -62,15 +59,13 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavView"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="65dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
         app:menu="@menu/bottom_nav_menu"
         app:itemIconTint="@color/text_secondary"
         app:itemTextColor="@color/text_secondary"
-        app:itemBackground="@drawable/bg_nav_item"
-        app:itemActiveIndicatorStyle="@style/NavActiveIndicator"
         android:background="@drawable/bg_nav_bar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -85,7 +80,7 @@
         android:layout_marginTop="24dp"
         android:src="@drawable/ic_settings"
         app:fabSize="normal"
-        app:backgroundTint="?attr/colorPrimary"
+        app:backgroundTint="@color/primary_blue"
         app:tint="@android:color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

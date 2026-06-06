@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.OpenCore" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary_blue</item>
@@ -9,6 +10,11 @@
         <item name="android:windowBackground">@color/dark_bg</item>
         <item name="android:statusBarColor">@color/dark_bg</item>
         <item name="android:navigationBarColor">@color/dark_bg</item>
-        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.Material.AlertDialog</item>
+    </style>
+
+    <!-- 对话框样式 -->
+    <style name="CustomAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorAccent">@color/primary_blue</item>
     </style>
 </resources>
