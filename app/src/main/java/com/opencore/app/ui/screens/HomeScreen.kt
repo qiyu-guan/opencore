@@ -25,6 +25,8 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
     var bootStatus by remember { mutableStateOf("未修补") }
     var patchProgress by remember { mutableStateOf(0) }
     val totalFeatures = 53
+    val progressValue = enabledFeatures.toFloat() / totalFeatures.toFloat()
+    val engineProgress = engineLoad.toFloat() / 100f
     
     Column(
         modifier = Modifier
@@ -33,45 +35,91 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
             .padding(16.dp)
     ) {
         // 标题区域
-        Text("OpenCore 控制中心", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "OpenCore 控制中心",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        Text("OpenCore v2.0 Native Engine | 运行中 | 53项特性", fontSize = 12.sp)
+        Text(
+            text = "OpenCore v2.0 Native Engine | 运行中 | 53项特性",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
         Spacer(modifier = Modifier.height(8.dp))
         
-        Text("已启用 $enabledFeatures/$totalFeatures", fontSize = 12.sp, color = TechBlue)
-        LinearProgressIndicator(
-            progress = enabledFeatures.toFloat() / totalFeatures,
-            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+        Text(
+            text = "已启用 $enabledFeatures/$totalFeatures",
+            fontSize = 12.sp,
             color = TechBlue
+        )
+        
+        LinearProgressIndicator(
+            progress = { progressValue },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = TechBlue,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
         
         // 状态卡片
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+            )
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("实时工作状态", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "实时工作状态",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                Text("引擎负载: $engineLoad%", fontSize = 14.sp)
+                Text(
+                    text = "引擎负载: $engineLoad%",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+                
                 LinearProgressIndicator(
-                    progress = engineLoad / 100f,
-                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
-                    color = TechBlue
+                    progress = { engineProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = TechBlue,
+                    trackColor = MaterialTheme.colorScheme.surface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 val serviceText = if (isServiceRunning) "运行中" else "已停止"
-                val serviceColor = if (isServiceRunning) Color(0xFF10B981) else Color(0xFFEF4444)
-                Text("底层服务: $serviceText", fontSize = 14.sp, color = serviceColor)
+                val serviceColor = if (isServiceRunning) SuccessGreen else ErrorRed
+                Text(
+                    text = "底层服务: $serviceText",
+                    fontSize = 14.sp,
+                    color = serviceColor
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 val kprobeText = if (isKprobeActive) "活跃" else "未激活"
-                val kprobeColor = if (isKprobeActive) Color(0xFF10B981) else Color(0xFFEF4444)
-                Text("内核注入: $kprobeText", fontSize = 14.sp, color = kprobeColor)
+                val kprobeColor = if (isKprobeActive) SuccessGreen else ErrorRed
+                Text(
+                    text = "内核注入: $kprobeText",
+                    fontSize = 14.sp,
+                    color = kprobeColor
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "启用功能: 设备伪装 • SELinux • SU权限",
+                    text = "启用功能: 设备伪装 • SELinux • SU权限 • 虚拟机隔离",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
@@ -80,22 +128,45 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
         
         // Boot 卡片
-        Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+            )
+        ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Boot镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "Boot镜像管理",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                Text("当前模式: $bootMode", fontSize = 14.sp)
+                Text(
+                    text = "当前模式: $bootMode",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                val bootColor = if (bootStatus == "已修补") Color(0xFF10B981) else Color.Gray
-                Text("镜像状态: $bootStatus", fontSize = 14.sp, color = bootColor)
+                val bootColor = if (bootStatus == "已修补") SuccessGreen else Color.Gray
+                Text(
+                    text = "镜像状态: $bootStatus",
+                    fontSize = 14.sp,
+                    color = bootColor
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 if (patchProgress > 0 && patchProgress < 100) {
+                    val patchProgressValue = patchProgress.toFloat() / 100f
                     LinearProgressIndicator(
-                        progress = patchProgress / 100f,
-                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
+                        progress = { patchProgressValue },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
                         color = TechBlue
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -107,15 +178,29 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
                         bootStatus = "已修补"
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TechBlue
+                    ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("一键修补 Boot 镜像", color = Color.White)
+                    Text(
+                        text = "一键修补 Boot 镜像",
+                        color = Color.White
+                    )
                 }
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text("OpenCore v2.0.0", fontSize = 10.sp, color = Color.Gray)
+        Text(
+            text = "OpenCore v2.0.0 | Build 2026.06",
+            fontSize = 10.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
+
+// 定义颜色常量（避免重复导入）
+private val SuccessGreen = Color(0xFF10B981)
+private val ErrorRed = Color(0xFFEF4444)

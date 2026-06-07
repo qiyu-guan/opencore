@@ -11,12 +11,10 @@ import androidx.core.view.WindowCompat
 private val DarkColorScheme = darkColorScheme(
     primary = TechBlue,
     onPrimary = Color.White,
-    primaryContainer = TechBlueDark,
     secondary = TechBlueLight,
     onSecondary = Color.White,
     background = DarkBg,
     surface = DarkSurface,
-    surfaceVariant = DarkCard,
     onBackground = TextPrimary,
     onSurface = TextPrimary,
     error = ErrorRed
@@ -25,14 +23,12 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = TechBlue,
     onPrimary = Color.White,
-    primaryContainer = TechBlueLight,
     secondary = TechBlue,
     onSecondary = Color.White,
     background = LightBg,
     surface = LightSurface,
-    surfaceVariant = LightCard,
-    onBackground = TextLightPrimary,
-    onSurface = TextLightPrimary,
+    onBackground = Color(0xFF1E293B),
+    onSurface = Color(0xFF1E293B),
     error = ErrorRed
 )
 
@@ -42,8 +38,8 @@ fun OpenCoreTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    
     val view = LocalView.current
+    
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as androidx.activity.ComponentActivity).window
