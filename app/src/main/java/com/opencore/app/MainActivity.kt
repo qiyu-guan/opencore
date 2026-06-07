@@ -20,8 +20,17 @@ import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
 import com.opencore.app.ui.screens.SettingsScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
+import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.utils.LogHelper
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
     
@@ -41,7 +50,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun OpenCoreApp() {
         val themeViewModel: ThemeViewModel = viewModel(
-            factory = ThemeViewModel.Factory(applicationContext)
+            factory = ThemeViewModelFactory.Factory(applicationContext)
         )
         
         OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
@@ -59,9 +68,9 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         var selectedTab by remember { mutableStateOf(0) }
         
-        androidx.compose.material3.Scaffold(
+        Scaffold(
             bottomBar = {
-                BottomNavigationBar(
+                com.opencore.app.ui.components.BottomNavigationBar(
                     selectedTab = selectedTab,
                     onTabSelected = { index ->
                         selectedTab = index
@@ -74,15 +83,15 @@ class MainActivity : ComponentActivity() {
                 )
             },
             floatingActionButton = {
-                androidx.compose.material3.FloatingActionButton(
+                FloatingActionButton(
                     onClick = { navController.navigate("settings") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape,
                     modifier = androidx.compose.ui.Modifier
                         .padding(end = 16.dp, top = 16.dp)
                 ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Settings,
+                    Icon(
+                        imageVector = Icons.Default.Settings,
                         contentDescription = "设置",
                         tint = Color.White
                     )
