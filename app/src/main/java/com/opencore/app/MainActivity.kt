@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,7 +24,6 @@ import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
 import com.opencore.app.ui.screens.SettingsScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
-import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.ui.theme.ThemeViewModelFactory
 import com.opencore.app.utils.LogHelper
@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
                     tonalElevation = 0.dp
                 ) {
                     val items = listOf("主页", "日志", "模块")
+                    val icons = listOf(Icons.Default.Home, Icons.Default.List, Icons.Default.Apps)
                     items.forEachIndexed { index, title ->
                         NavigationBarItem(
                             selected = selectedTab == index,
@@ -71,9 +72,12 @@ class MainActivity : ComponentActivity() {
                                     2 -> navController.navigate("modules") { popUpTo("modules") { inclusive = true } }
                                 }
                             },
-                            icon = { Icon(if (index == 0) Icons.Default.Home else if (index == 1) Icons.Default.List else Icons.Default.Apps, contentDescription = title) },
+                            icon = { Icon(icons[index], contentDescription = title) },
                             label = { Text(title, fontSize = 12.sp) },
-                            colors = NavigationBarItemDefaults.colors(selectedIconColor = TechBlue, selectedTextColor = TechBlue)
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = TechBlue,
+                                selectedTextColor = TechBlue
+                            )
                         )
                     }
                 }
@@ -99,10 +103,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 临时添加缺失的图标（实际项目中可以用 Icons.Default）
+// 颜色定义
+private val TechBlue = Color(0xFF2563EB)
+
+// 添加缺失的 Icons.Default.Home 等（Compose 已经包含，这里确保引用正确）
+@Suppress("UnnecessaryVariable")
 private val Icons.Default.Home: androidx.compose.ui.graphics.vector.ImageVector
     get() = androidx.compose.material.icons.Icons.Default.Home
 private val Icons.Default.List: androidx.compose.ui.graphics.vector.ImageVector
     get() = androidx.compose.material.icons.Icons.Default.List
 private val Icons.Default.Apps: androidx.compose.ui.graphics.vector.ImageVector
     get() = androidx.compose.material.icons.Icons.Default.Apps
+private val Icons.Default.Settings: androidx.compose.ui.graphics.vector.ImageVector
+    get() = androidx.compose.material.icons.Icons.Default.Settings

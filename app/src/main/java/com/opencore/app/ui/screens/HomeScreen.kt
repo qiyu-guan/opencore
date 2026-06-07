@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,7 +79,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
                 Text("实时工作状态", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(12.dp))
                 InfoRow("引擎负载", "${engineStatus.cpuLoad}%", TechBlue)
-                InfoRow("内核注入", if (engineStatus.isKprobeActive) "活跃" else "未激活", if (engineStatus.isKprobeActive) SuccessGreen else ErrorRed)
+                InfoRow("内核注入", if (engineStatus.isKprobeActive) "活跃" else "未激活", if (engineStatus.isKprobeActive) Color(0xFF10B981) else Color(0xFFEF4444))
                 InfoRow("内核版本", engineStatus.kernelVersion, Color.Gray)
                 InfoRow("SELinux", engineStatus.selinuxMode, Color.Gray)
             }
@@ -89,7 +91,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
                 Text("Boot镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(12.dp))
                 InfoRow("当前模式", engineStatus.bootMode, TechBlue)
-                InfoRow("镜像状态", engineStatus.bootStatus, if (engineStatus.bootStatus == "已修补") SuccessGreen else Color.Gray)
+                InfoRow("镜像状态", engineStatus.bootStatus, if (engineStatus.bootStatus == "已修补") Color(0xFF10B981) else Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
                 if (isPatching) {
                     LinearProgressIndicator(progress = { patchProgress / 100f }, modifier = Modifier.fillMaxWidth().height(4.dp), color = TechBlue)

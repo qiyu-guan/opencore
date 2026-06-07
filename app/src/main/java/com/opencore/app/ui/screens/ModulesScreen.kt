@@ -25,8 +25,8 @@ import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.launch
 import android.widget.Toast
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,12 +36,11 @@ fun ModulesScreen() {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("已安装", "在线库")
 
-    var installedModules by remember { mutableStateOf(ModuleManager.getInstalledModules()) }
+    var installedModules by remember { mutableStateOf(listOf<com.opencore.app.engine.InstalledModule>()) }
     var isLoading by remember { mutableStateOf(false) }
     var installing by remember { mutableStateOf(false) }
     var installProgress by remember { mutableStateOf("") }
 
-    // 刷新已安装模块列表
     suspend fun refreshModules() {
         isLoading = true
         ModuleManager.loadInstalledModules()
@@ -49,11 +48,8 @@ fun ModulesScreen() {
         isLoading = false
     }
 
-    LaunchedEffect(Unit) {
-        refreshModules()
-    }
+    LaunchedEffect(Unit) { refreshModules() }
 
-    // 本地 zip 导入
     val zipPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
@@ -61,9 +57,7 @@ fun ModulesScreen() {
             scope.launch {
                 installing = true
                 installProgress = "正在复制..."
-                val success = ModuleInstaller.installFromZip(context, uri) { msg ->
-                    installProgress = msg
-                }
+                val success = ModuleInstaller.installFromZip(context, uri) { msg -> installProgress = msg }
                 if (success) {
                     refreshModules()
                     Toast.makeText(context, "安装成功，重启后生效", Toast.LENGTH_LONG).show()
@@ -76,7 +70,6 @@ fun ModulesScreen() {
         }
     }
 
-    // 在线下载安装
     fun downloadAndInstall(remote: com.opencore.app.engine.RemoteModule) {
         scope.launch {
             if (!RootManager.isRooted()) {
@@ -96,9 +89,7 @@ fun ModulesScreen() {
                     "${context.packageName}.fileprovider",
                     tempFile
                 )
-                val installOk = ModuleInstaller.installFromZip(context, uri) { msg ->
-                    installProgress = msg
-                }
+                val installOk = ModuleInstaller.installFromZip(context, uri) { msg -> installProgress = msg }
                 if (installOk) {
                     refreshModules()
                     Toast.makeText(context, "安装成功，重启生效", Toast.LENGTH_LONG).show()
@@ -154,6 +145,8 @@ fun ModulesScreen() {
 @Composable
 fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, isLoading: Boolean, onRefresh: suspend () -> Unit) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
     } else if (modules.isEmpty()) {
@@ -173,11 +166,11 @@ fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, 
                         OutlinedButton(onClick = {
                             scope.launch {
                                 val success = ModuleInstaller.uninstallModule(module.id) { msg ->
-                                    Toast.makeText(androidx.compose.ui.platform.LocalContext.current, msg, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                 }
                                 if (success) onRefresh()
                             }
-                        }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed)) {
+                        }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))) {
                             Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("卸载", fontSize = 12.sp)
@@ -211,6 +204,3 @@ fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) 
         }
     }
 }
-
-private val SuccessGreen = Color(0xFF10B981)
-private val ErrorRed = Color(0xFFEF4444)
