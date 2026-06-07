@@ -4,7 +4,6 @@ import androidx.compose.ui.graphics.Color
 
 val TechBlue = Color(0xFF2563EB)
 val TechBlueLight = Color(0xFF3B82F6)
-val TechBlueDark = Color(0xFF1D4ED8)
 val DarkBg = Color(0xFF0A0E17)
 val DarkSurface = Color(0xFF1A1F2E)
 val LightBg = Color(0xFFF8FAFC)

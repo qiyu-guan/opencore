@@ -18,109 +18,33 @@ import com.opencore.app.ui.theme.ThemeViewModel
 
 @Composable
 fun SettingsScreen(themeViewModel: ThemeViewModel) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            Text(
-                text = "全局配置",
-                fontSize = 22.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Text("全局设置", fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
         }
-        
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (themeViewModel.isDarkTheme.value) Icons.Default.DarkMode else Icons.Default.LightMode,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                        )
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(if (themeViewModel.isDarkTheme.value) Icons.Default.DarkMode else Icons.Default.LightMode, contentDescription = null)
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text(
-                                text = "深色主题",
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                text = if (themeViewModel.isDarkTheme.value) "已启用深色模式" else "已启用浅色模式",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                            )
+                            Text("深色主题", fontSize = 16.sp)
+                            Text(if (themeViewModel.isDarkTheme.value) "已启用" else "已禁用", fontSize = 12.sp, color = Color.Gray)
                         }
                     }
-                    Switch(
-                        checked = themeViewModel.isDarkTheme.value,
-                        onCheckedChange = { themeViewModel.toggleTheme() },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = TechBlue
-                        )
-                    )
+                    Switch(checked = themeViewModel.isDarkTheme.value, onCheckedChange = { themeViewModel.toggleTheme() }, colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = TechBlue))
                 }
             }
         }
-        
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
+            Card(shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "关于",
-                        fontSize = 14.sp,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("版本", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
-                        Text("OpenCore v6.0", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                    }
+                    Text("关于", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("构建日期", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
-                        Text("2026-06-07", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("核心特性", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
-                        Text("53项完整版", fontSize = 14.sp, color = TechBlue)
-                    }
+                    Text("OpenCore v13.0")
+                    Text("Build: 2026-06-07")
+                    Text("53项核心特性")
                 }
             }
         }

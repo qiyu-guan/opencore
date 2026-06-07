@@ -10,7 +10,6 @@ object LogHelper {
     private const val KEY_LOG = "log_list"
     private const val MAX_LOG_SIZE = 200
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-
     private var appContext: Context? = null
 
     fun init(context: Context) {
@@ -18,8 +17,7 @@ object LogHelper {
     }
 
     private fun getPrefs(): SharedPreferences? {
-        val ctx = appContext ?: return null
-        return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return appContext?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
     fun addLog(tag: String, message: String) {
@@ -30,30 +28,14 @@ object LogHelper {
         currentLogs.add(logEntry)
         if (currentLogs.size > MAX_LOG_SIZE) currentLogs.removeAt(0)
         prefs.edit().putStringSet(KEY_LOG, currentLogs.toSet()).apply()
-
-        // 自动清除旧日志（7天）
-        val autoClear = appContext?.getSharedPreferences("opencore_prefs", Context.MODE_PRIVATE)
-            ?.getBoolean("auto_clear_log", true) ?: true
-        if (autoClear) {
-            trimOldLogs(prefs)
-        }
     }
 
-    private fun trimOldLogs(prefs: SharedPreferences) {
-        val logs = getLogsFromPrefs(prefs).toMutableList()
-        val cutoff = System.currentTimeMillis() - 7 * 24 * 3600 * 1000L
-        val newLogs = logs.filter {
-            try {
-                val dateStr = it.substring(1, 20)
-                val date = dateFormat.parse(dateStr)
-                date.time > cutoff
-            } catch (e: Exception) {
-                true
-            }
-        }
-        if (newLogs.size != logs.size) {
-            prefs.edit().putStringSet(KEY_LOG, newLogs.toSet()).apply()
-        }
+    fun addRawLog(logEntry: String) {
+        val prefs = getPrefs() ?: return
+        val currentLogs = getLogsFromPrefs(prefs).toMutableList()
+        currentLogs.add(logEntry)
+        if (currentLogs.size > MAX_LOG_SIZE) currentLogs.removeAt(0)
+        prefs.edit().putStringSet(KEY_LOG, currentLogs.toSet()).apply()
     }
 
     private fun getLogsFromPrefs(prefs: SharedPreferences): List<String> {

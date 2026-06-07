@@ -16,7 +16,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.opencore.app.ui.components.BottomNavigationBar
+import com.opencore.app.engine.OpenCoreEngine
+import com.opencore.app.engine.ModuleManager
 import com.opencore.app.ui.screens.HomeScreen
 import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
@@ -26,72 +27,69 @@ import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.ui.theme.ThemeViewModelFactory
 import com.opencore.app.utils.LogHelper
+import com.opencore.app.utils.RootManager
 
 class MainActivity : ComponentActivity() {
-    
-    init {
-        System.loadLibrary("native-lib")
-    }
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         LogHelper.init(this)
-        
+        RootManager.init(this)
+        OpenCoreEngine.init(this)
+        ModuleManager.init(this)
+
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel(
-                factory = ThemeViewModelFactory(applicationContext)
-            )
+            val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(applicationContext))
             OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AppNavigation(themeViewModel)
                 }
             }
         }
     }
-    
+
     @Composable
     fun AppNavigation(themeViewModel: ThemeViewModel) {
         val navController = rememberNavController()
         var selectedTab by remember { mutableStateOf(0) }
-        
+
         Scaffold(
             bottomBar = {
-                BottomNavigationBar(
-                    selectedTab = selectedTab,
-                    onTabSelected = { index ->
-                        selectedTab = index
-                        when (index) {
-                            0 -> navController.navigate("home") { popUpTo("home") { inclusive = true } }
-                            1 -> navController.navigate("log") { popUpTo("log") { inclusive = true } }
-                            2 -> navController.navigate("modules") { popUpTo("modules") { inclusive = true } }
-                        }
+                NavigationBar(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                    tonalElevation = 0.dp
+                ) {
+                    val items = listOf("主页", "日志", "模块")
+                    items.forEachIndexed { index, title ->
+                        NavigationBarItem(
+                            selected = selectedTab == index,
+                            onClick = {
+                                selectedTab = index
+                                when (index) {
+                                    0 -> navController.navigate("home") { popUpTo("home") { inclusive = true } }
+                                    1 -> navController.navigate("log") { popUpTo("log") { inclusive = true } }
+                                    2 -> navController.navigate("modules") { popUpTo("modules") { inclusive = true } }
+                                }
+                            },
+                            icon = { Icon(if (index == 0) Icons.Default.Home else if (index == 1) Icons.Default.List else Icons.Default.Apps, contentDescription = title) },
+                            label = { Text(title, fontSize = 12.sp) },
+                            colors = NavigationBarItemDefaults.colors(selectedIconColor = TechBlue, selectedTextColor = TechBlue)
+                        )
                     }
-                )
+                }
             },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate("settings") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    modifier = Modifier
-                        .padding(end = 16.dp, top = 16.dp)
+                    modifier = Modifier.padding(end = 16.dp, top = 16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "设置",
-                        tint = Color.White
-                    )
+                    Icon(Icons.Default.Settings, contentDescription = "设置", tint = Color.White)
                 }
             }
         ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = "home",
-                modifier = Modifier.padding(innerPadding)
-            ) {
+            NavHost(navController = navController, startDestination = "home", modifier = Modifier.padding(innerPadding)) {
                 composable("home") { HomeScreen(themeViewModel) }
                 composable("log") { LogScreen() }
                 composable("modules") { ModulesScreen() }
@@ -100,3 +98,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+// 临时添加缺失的图标（实际项目中可以用 Icons.Default）
+private val Icons.Default.Home: androidx.compose.ui.graphics.vector.ImageVector
+    get() = androidx.compose.material.icons.Icons.Default.Home
+private val Icons.Default.List: androidx.compose.ui.graphics.vector.ImageVector
+    get() = androidx.compose.material.icons.Icons.Default.List
+private val Icons.Default.Apps: androidx.compose.ui.graphics.vector.ImageVector
+    get() = androidx.compose.material.icons.Icons.Default.Apps

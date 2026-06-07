@@ -32,11 +32,10 @@ jobs:
         run: |
           echo "y" | sdkmanager "ndk;25.1.8937393"
 
-      - name: Install Gradle 8.2
+      - name: Install Gradle 8.2 (using domestic mirror)
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip
+          wget -q https://mirrors.aliyun.com/macports/distfiles/gradle/gradle-8.2-bin.zip
           unzip -q gradle-8.2-bin.zip
-          sudo rm -f /usr/local/gradle-8.2
           sudo mv gradle-8.2 /usr/local/
           echo "/usr/local/gradle-8.2/bin" >> $GITHUB_PATH
 

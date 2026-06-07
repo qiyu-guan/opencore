@@ -1,9 +1,11 @@
 buildscript {
     ext.kotlin_version = '1.9.22'
     repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://jitpack.io' }
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.0'
@@ -13,9 +15,11 @@ buildscript {
 
 allprojects {
     repositories {
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://jitpack.io' }
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
     }
 }
 

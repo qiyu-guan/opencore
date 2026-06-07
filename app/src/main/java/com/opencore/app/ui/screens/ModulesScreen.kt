@@ -1,5 +1,7 @@
 package com.opencore.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,281 +18,133 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.opencore.app.engine.Module
+import com.opencore.app.engine.ModuleInstaller
 import com.opencore.app.engine.ModuleManager
+import com.opencore.app.engine.ModuleRepository
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.launch
 import android.widget.Toast
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Tab
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModulesScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val modules = remember { ModuleManager.getAllModules().toMutableStateList() }
-    val groupedModules = remember(modules) { ModuleManager.getModulesByCategory() }
-    
-    var showRootRequestDialog by rememberSaveable { mutableStateOf(!RootManager.isRooted()) }
-    
-    // Root 权限请求启动器
-    val rootRequestLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        // 权限请求返回后重新检查
-        scope.launch {
-            kotlinx.coroutines.delay(500)
-            if (RootManager.isRooted()) {
-                showRootRequestDialog = false
-                Toast.makeText(context, "Root 权限已获取", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Root 权限获取失败，请确保已安装 Magisk 并授权", Toast.LENGTH_LONG).show()
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("已安装", "在线库")
+
+    var installedModules by remember { mutableStateOf(ModuleManager.getInstalledModules()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var installing by remember { mutableStateOf(false) }
+    var installProgress by remember { mutableStateOf("") }
+
+    // 刷新已安装模块列表
+    suspend fun refreshModules() {
+        isLoading = true
+        ModuleManager.loadInstalledModules()
+        installedModules = ModuleManager.getInstalledModules()
+        isLoading = false
+    }
+
+    LaunchedEffect(Unit) {
+        refreshModules()
+    }
+
+    // 本地 zip 导入
+    val zipPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                installing = true
+                installProgress = "正在复制..."
+                val success = ModuleInstaller.installFromZip(context, uri) { msg ->
+                    installProgress = msg
+                }
+                if (success) {
+                    refreshModules()
+                    Toast.makeText(context, "安装成功，重启后生效", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "安装失败: $installProgress", Toast.LENGTH_SHORT).show()
+                }
+                installing = false
+                installProgress = ""
             }
         }
     }
-    
-    // 请求 Root 权限
-    fun requestRoot(activity: androidx.activity.ComponentActivity) {
-        RootManager.requestRootPermission(activity) { granted ->
-            if (granted) {
-                showRootRequestDialog = false
-                Toast.makeText(context, "Root 权限已授予", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "需要 Root 权限才能导入模块", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    // 导入模块的方法
-    fun importModule(module: Module) {
-        scope.launch {
-            if (!RootManager.isRooted()) {
-                Toast.makeText(context, "请先授予 Root 权限", Toast.LENGTH_SHORT).show()
-                return@launch
-            }
-            
-            // 模拟导入过程
-            Toast.makeText(context, "正在导入 ${module.name}...", Toast.LENGTH_SHORT).show()
-            kotlinx.coroutines.delay(1000)
-            
-            val success = ModuleManager.setModuleEnabled(module.id, true)
-            if (success) {
-                val index = modules.indexOfFirst { it.id == module.id }
-                if (index >= 0) modules[index] = modules[index].copy(isEnabled = true)
-                Toast.makeText(context, "${module.name} 导入成功", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "${module.name} 导入失败", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    // 卸载模块
-    fun uninstallModule(module: Module) {
+
+    // 在线下载安装
+    fun downloadAndInstall(remote: com.opencore.app.engine.RemoteModule) {
         scope.launch {
             if (!RootManager.isRooted()) {
-                Toast.makeText(context, "请先授予 Root 权限", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "需要 Root 权限", Toast.LENGTH_SHORT).show()
                 return@launch
             }
-            
-            val success = ModuleManager.setModuleEnabled(module.id, false)
-            if (success) {
-                val index = modules.indexOfFirst { it.id == module.id }
-                if (index >= 0) modules[index] = modules[index].copy(isEnabled = false)
-                Toast.makeText(context, "${module.name} 已卸载", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "${module.name} 卸载失败", Toast.LENGTH_SHORT).show()
+            installing = true
+            installProgress = "下载中 0%"
+            val tempFile = java.io.File(context.cacheDir, "${remote.id}.zip")
+            val success = ModuleRepository.downloadModule(remote.downloadUrl, tempFile) { progress ->
+                installProgress = "下载中 $progress%"
             }
+            if (success) {
+                installProgress = "安装中..."
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    tempFile
+                )
+                val installOk = ModuleInstaller.installFromZip(context, uri) { msg ->
+                    installProgress = msg
+                }
+                if (installOk) {
+                    refreshModules()
+                    Toast.makeText(context, "安装成功，重启生效", Toast.LENGTH_LONG).show()
+                }
+                tempFile.delete()
+            } else {
+                Toast.makeText(context, "下载失败", Toast.LENGTH_SHORT).show()
+            }
+            installing = false
+            installProgress = ""
         }
     }
-    
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Root 权限提示卡片
-        if (!RootManager.isRooted()) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFFEF4444).copy(alpha = 0.15f)
-                    )
+
+    Scaffold(
+        topBar = {
+            TabRow(selectedTabIndex = selectedTab) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(selected = selectedTab == index, onClick = { selectedTab = index }, text = { Text(title) })
+                }
+            }
+        },
+        floatingActionButton = {
+            if (selectedTab == 0 && !installing) {
+                FloatingActionButton(
+                    onClick = { zipPickerLauncher.launch("application/zip") },
+                    containerColor = TechBlue,
+                    shape = androidx.compose.foundation.shape.CircleShape
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFEF4444))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("需要 Root 权限", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
-                        }
+                    Icon(Icons.Default.Add, contentDescription = "导入本地模块")
+                }
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            if (installing) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("导入模块需要 Root 权限，请点击下方按钮授权", fontSize = 13.sp, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = {
-                                val activity = context as? androidx.activity.ComponentActivity
-                                if (activity != null) {
-                                    requestRoot(activity)
-                                } else {
-                                    Toast.makeText(context, "无法获取 Activity", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.LockOpen, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("授予 Root 权限")
-                        }
+                        Text(installProgress)
                     }
-                }
-            }
-        }
-        
-        // 统计卡片
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("模块库", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        Surface(shape = RoundedCornerShape(12.dp), color = TechBlue.copy(alpha = 0.15f)) {
-                            Text("共 ${modules.size} 个可用模块", fontSize = 12.sp, color = TechBlue, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("点击「导入」按钮将模块安装到系统中", fontSize = 12.sp, color = Color.Gray)
-                }
-            }
-        }
-        
-        // 按分组显示可导入的模块
-        groupedModules.forEach { (category, categoryModules) ->
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    color = TechBlue.copy(alpha = 0.1f)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(category, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = TechBlue)
-                        Text("${categoryModules.count { it.isEnabled }} 已导入", fontSize = 12.sp, color = TechBlue)
-                    }
-                }
-            }
-            
-            items(categoryModules) { module ->
-                ModuleImportCard(
-                    module = module,
-                    onImport = { importModule(module) },
-                    onUninstall = { uninstallModule(module) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ModuleImportCard(
-    module: Module,
-    onImport: () -> Unit,
-    onUninstall: () -> Unit
-) {
-    val isImported = module.isEnabled
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isImported) TechBlue.copy(alpha = 0.12f)
-            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // 图标
-                Card(
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isImported) TechBlue.copy(alpha = 0.15f)
-                        else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(
-                            getModuleIcon(module.id),
-                            contentDescription = null,
-                            tint = if (isImported) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-                
-                Column {
-                    Text(
-                        module.name,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (isImported) TechBlue else MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        module.description,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                        maxLines = 1
-                    )
-                }
-            }
-            
-            // 导入/卸载按钮
-            if (isImported) {
-                OutlinedButton(
-                    onClick = onUninstall,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFEF4444)
-                    )
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("卸载", fontSize = 12.sp)
                 }
             } else {
-                Button(
-                    onClick = onImport,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
-                    modifier = Modifier.width(80.dp)
-                ) {
-                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("导入", fontSize = 12.sp)
+                when (selectedTab) {
+                    0 -> InstalledModulesTab(installedModules, isLoading, refreshModules)
+                    1 -> OnlineModulesTab(::downloadAndInstall)
                 }
             }
         }
@@ -298,16 +152,65 @@ fun ModuleImportCard(
 }
 
 @Composable
-fun getModuleIcon(id: Int) = when (id) {
-    0 -> Icons.Default.DeviceHub
-    1 -> Icons.Default.Memory
-    2 -> Icons.Default.Security
-    3 -> Icons.Default.AdminPanelSettings
-    4 -> Icons.Default.Storage
-    5 -> Icons.Default.ListAlt
-    6 -> Icons.Default.SdStorage
-    7 -> Icons.Default.Update
-    8 -> Icons.Default.CleaningServices
-    9 -> Icons.Default.BugReport
-    else -> Icons.Default.Apps
+fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, isLoading: Boolean, onRefresh: suspend () -> Unit) {
+    val scope = rememberCoroutineScope()
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+    } else if (modules.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("没有已安装的 Magisk 模块", fontSize = 14.sp, color = Color.Gray)
+        }
+    } else {
+        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(modules) { module ->
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(module.name, fontWeight = FontWeight.Medium)
+                            Text(module.id, fontSize = 11.sp, color = Color.Gray)
+                            Text(module.version, fontSize = 10.sp, color = Color.Gray)
+                        }
+                        OutlinedButton(onClick = {
+                            scope.launch {
+                                val success = ModuleInstaller.uninstallModule(module.id) { msg ->
+                                    Toast.makeText(androidx.compose.ui.platform.LocalContext.current, msg, Toast.LENGTH_SHORT).show()
+                                }
+                                if (success) onRefresh()
+                            }
+                        }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed)) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("卸载", fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
+@Composable
+fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) {
+    val remoteModules = ModuleRepository.availableModules
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(remoteModules) { module ->
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(module.name, fontWeight = FontWeight.Medium)
+                        Text(module.description, fontSize = 12.sp, color = Color.Gray)
+                        Text("版本: ${module.version}", fontSize = 10.sp)
+                    }
+                    Button(onClick = { onInstall(module) }, colors = ButtonDefaults.buttonColors(containerColor = TechBlue), shape = RoundedCornerShape(12.dp)) {
+                        Icon(Icons.Default.Download, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("安装", fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val SuccessGreen = Color(0xFF10B981)
+private val ErrorRed = Color(0xFFEF4444)
