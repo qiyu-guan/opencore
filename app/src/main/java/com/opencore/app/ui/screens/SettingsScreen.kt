@@ -8,12 +8,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 
 @Composable
@@ -34,125 +35,101 @@ fun SettingsScreen(themeViewModel: ThemeViewModel) {
         }
         
         item {
-            SettingsCard(
-                title = "外观",
-                items = listOf(
-                    SettingsItem(
-                        icon = if (themeViewModel.isDarkTheme.value) Icons.Default.DarkMode else Icons.Default.LightMode,
-                        title = "深色主题",
-                        subtitle = if (themeViewModel.isDarkTheme.value) "已启用深色模式" else "已启用浅色模式",
-                        action = {
-                            Switch(
-                                checked = themeViewModel.isDarkTheme.value,
-                                onCheckedChange = { themeViewModel.toggleTheme() },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = TechBlue
-                                )
-                            )
-                        }
-                    )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 )
-            )
-        }
-        
-        item {
-            SettingsCard(
-                title = "关于",
-                items = listOf(
-                    SettingsItem(
-                        icon = null,
-                        title = "版本",
-                        subtitle = "OpenCore v2.0.0",
-                        action = null
-                    ),
-                    SettingsItem(
-                        icon = null,
-                        title = "构建日期",
-                        subtitle = "2026-06-06",
-                        action = null
-                    ),
-                    SettingsItem(
-                        icon = null,
-                        title = "53项核心特性",
-                        subtitle = "完整版已启用",
-                        action = null
-                    )
-                )
-            )
-        }
-    }
-}
-
-data class SettingsItem(
-    val icon: androidx.compose.ui.graphics.vector.ImageVector?,
-    val title: String,
-    val subtitle: String,
-    val action: (@Composable () -> Unit)?
-)
-
-@Composable
-fun SettingsCard(
-    title: String,
-    items: List<SettingsItem>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            items.forEach { item ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
+                    Text(
+                        text = "外观",
+                        fontSize = 14.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (item.icon != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Icon(
-                                imageVector = item.icon,
+                                imageVector = if (themeViewModel.isDarkTheme.value) Icons.Default.DarkMode else Icons.Default.LightMode,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                             )
+                            Column {
+                                Text(
+                                    text = "深色主题",
+                                    fontSize = 15.sp,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    text = if (themeViewModel.isDarkTheme.value) "已启用深色模式" else "已启用浅色模式",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                                )
+                            }
                         }
-                        Column {
-                            Text(
-                                text = item.title,
-                                fontSize = 15.sp,
-                                color = MaterialTheme.colorScheme.onBackground
+                        Switch(
+                            checked = themeViewModel.isDarkTheme.value,
+                            onCheckedChange = { themeViewModel.toggleTheme() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = TechBlue
                             )
-                            Text(
-                                text = item.subtitle,
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
-                            )
-                        }
+                        )
                     }
-                    item.action?.invoke()
                 }
-                if (items.last() != item) {
+            }
+        }
+        
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "关于",
+                        fontSize = 14.sp,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                    
                     Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("版本", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text("OpenCore v3.0", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("构建日期", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text("2026-06-07", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("核心特性", fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+                        Text("53项完整版", fontSize = 14.sp, color = TechBlue)
+                    }
                 }
             }
         }
     }
 }
-
-private val TechBlue = Color(0xFF2563EB)

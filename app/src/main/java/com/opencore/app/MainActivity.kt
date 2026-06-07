@@ -4,17 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.opencore.app.ui.components.BottomNavigationBar
 import com.opencore.app.ui.screens.HomeScreen
 import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
@@ -23,14 +25,6 @@ import com.opencore.app.ui.theme.OpenCoreTheme
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.utils.LogHelper
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
     
@@ -43,22 +37,14 @@ class MainActivity : ComponentActivity() {
         LogHelper.init(this)
         
         setContent {
-            OpenCoreApp()
-        }
-    }
-    
-    @Composable
-    fun OpenCoreApp() {
-        val themeViewModel: ThemeViewModel = viewModel(
-            factory = ThemeViewModelFactory.Factory(applicationContext)
-        )
-        
-        OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
-            Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.background
-            ) {
-                AppNavigation(themeViewModel)
+            val themeViewModel: ThemeViewModel = viewModel()
+            OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AppNavigation(themeViewModel)
+                }
             }
         }
     }
@@ -70,7 +56,7 @@ class MainActivity : ComponentActivity() {
         
         Scaffold(
             bottomBar = {
-                com.opencore.app.ui.components.BottomNavigationBar(
+                BottomNavigationBar(
                     selectedTab = selectedTab,
                     onTabSelected = { index ->
                         selectedTab = index
@@ -87,8 +73,7 @@ class MainActivity : ComponentActivity() {
                     onClick = { navController.navigate("settings") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    modifier = androidx.compose.ui.Modifier
-                        .padding(end = 16.dp, top = 16.dp)
+                    modifier = Modifier.padding(end = 16.dp, top = 16.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -97,7 +82,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             },
-            floatingActionButtonPosition = androidx.compose.material3.FabPosition.EndTop
+            floatingActionButtonPosition = FabPosition.EndTop
         ) { innerPadding ->
             NavHost(
                 navController = navController,
