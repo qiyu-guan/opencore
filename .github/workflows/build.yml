@@ -5,9 +5,11 @@ on:
     branches: [ main ]
     tags:
       - 'v*'
-  schedule:
-    - cron: '0 0 * * 0'
   workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
   build:
@@ -31,47 +33,20 @@ jobs:
         run: |
           echo "y" | sdkmanager "ndk;25.1.8937393"
 
-      - name: Install Gradle 8.2
-        run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip
-          unzip -q gradle-8.2-bin.zip
-          echo "$PWD/gradle-8.2/bin" >> $GITHUB_PATH
-
-      - name: Build native libraries
-        run: gradle externalNativeBuildRelease
-
-      - name: Build APK
+      - name: Build with Gradle
         run: gradle assembleRelease
-
-      - name: Prepare Magisk module
-        run: |
-          mkdir -p magisk_ready/system/lib64
-          # 寻找生成的 so 文件（不同 Gradle 版本路径可能不同）
-          SO_PATH=$(find app/build -name "libnative-lib.so" 2>/dev/null | head -1)
-          if [ -f "$SO_PATH" ]; then
-            cp "$SO_PATH" magisk_ready/system/lib64/
-            echo "Found native library at $SO_PATH"
-          else
-            echo "Native library not found, creating placeholder"
-            echo "Placeholder" > magisk_ready/system/lib64/libnative-lib.so
-          fi
-          cp -r magisk_module/* magisk_ready/
-          cd magisk_ready && zip -r ../OpenCore-Magisk.zip . && cd ..
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OpenCore-Artifacts
-          path: |
-            app/build/outputs/apk/release/*.apk
-            OpenCore-Magisk.zip
+          name: OpenCore-APK
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Create Release and upload assets
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            app/build/outputs/apk/release/*.apk
-            OpenCore-Magisk.zip
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

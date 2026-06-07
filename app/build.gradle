@@ -68,3 +68,8 @@ dependencies {
     
     debugImplementation 'androidx.compose.ui:ui-tooling'
 }
+
+// 文件选择器依赖
+implementation 'com.github.pecet:libsu:5.2.2'
+implementation 'com.github.pecet:libsu-io:5.2.2'
+implementation 'androidx.documentfile:documentfile:1.0.1'
