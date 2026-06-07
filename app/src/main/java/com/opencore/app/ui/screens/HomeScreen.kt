@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.opencore.app.engine.OpenCoreEngine
 import com.opencore.app.ui.theme.TechBlue
@@ -38,7 +39,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
     LaunchedEffect(Unit) {
         OpenCoreEngine.startMonitoring()
         lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+            override fun onDestroy(owner: LifecycleOwner) {
                 OpenCoreEngine.stopMonitoring()
             }
         })

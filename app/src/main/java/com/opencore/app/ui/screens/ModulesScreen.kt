@@ -41,11 +41,14 @@ fun ModulesScreen() {
     var installing by remember { mutableStateOf(false) }
     var installProgress by remember { mutableStateOf("") }
 
-    suspend fun refreshModules() {
-        isLoading = true
-        ModuleManager.loadInstalledModules()
-        installedModules = ModuleManager.getInstalledModules()
-        isLoading = false
+    // 刷新模块列表
+    fun refreshModules() {
+        scope.launch {
+            isLoading = true
+            ModuleManager.loadInstalledModules()
+            installedModules = ModuleManager.getInstalledModules()
+            isLoading = false
+        }
     }
 
     LaunchedEffect(Unit) { refreshModules() }
@@ -143,9 +146,9 @@ fun ModulesScreen() {
 }
 
 @Composable
-fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, isLoading: Boolean, onRefresh: suspend () -> Unit) {
-    val scope = rememberCoroutineScope()
+fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, isLoading: Boolean, onRefresh: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }

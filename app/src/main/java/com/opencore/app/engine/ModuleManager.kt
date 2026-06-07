@@ -4,6 +4,7 @@ import android.content.Context
 import com.opencore.app.utils.LogHelper
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 data class InstalledModule(
@@ -20,7 +21,10 @@ object ModuleManager {
 
     fun init(ctx: Context) {
         context = ctx.applicationContext
-        loadInstalledModules()
+        // 使用 runBlocking 在初始化时同步加载
+        runBlocking {
+            loadInstalledModules()
+        }
     }
 
     suspend fun loadInstalledModules() {

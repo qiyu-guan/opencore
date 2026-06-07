@@ -6,7 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -24,6 +27,7 @@ import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
 import com.opencore.app.ui.screens.SettingsScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
+import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.ui.theme.ThemeViewModelFactory
 import com.opencore.app.utils.LogHelper
@@ -102,17 +106,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-// 颜色定义
-private val TechBlue = Color(0xFF2563EB)
-
-// 添加缺失的 Icons.Default.Home 等（Compose 已经包含，这里确保引用正确）
-@Suppress("UnnecessaryVariable")
-private val Icons.Default.Home: androidx.compose.ui.graphics.vector.ImageVector
-    get() = androidx.compose.material.icons.Icons.Default.Home
-private val Icons.Default.List: androidx.compose.ui.graphics.vector.ImageVector
-    get() = androidx.compose.material.icons.Icons.Default.List
-private val Icons.Default.Apps: androidx.compose.ui.graphics.vector.ImageVector
-    get() = androidx.compose.material.icons.Icons.Default.Apps
-private val Icons.Default.Settings: androidx.compose.ui.graphics.vector.ImageVector
-    get() = androidx.compose.material.icons.Icons.Default.Settings
