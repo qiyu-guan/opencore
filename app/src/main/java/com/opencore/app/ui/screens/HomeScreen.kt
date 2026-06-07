@@ -40,7 +40,6 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 顶部信息区
         item {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -58,7 +57,6 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
                 
-                // 启用率进度条
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -87,17 +85,14 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
             }
         }
         
-        // 实时工作状态卡片
         item {
             StatusCard(
                 engineLoad = engineLoad,
                 isServiceRunning = isServiceRunning,
-                isKprobeActive = isKprobeActive,
-                enabledFeatures = enabledFeatures
+                isKprobeActive = isKprobeActive
             )
         }
         
-        // Boot镜像管理卡片
         item {
             BootCard(
                 bootMode = bootMode,
@@ -110,7 +105,6 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
             )
         }
         
-        // 版本号
         item {
             Text(
                 text = "OpenCore v2.0.0 | Build 2026.06",
@@ -127,8 +121,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
 fun StatusCard(
     engineLoad: Int,
     isServiceRunning: Boolean,
-    isKprobeActive: Boolean,
-    enabledFeatures: Int
+    isKprobeActive: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -148,7 +141,6 @@ fun StatusCard(
                 color = MaterialTheme.colorScheme.onBackground
             )
             
-            // 引擎负载
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -176,7 +168,6 @@ fun StatusCard(
                 trackColor = MaterialTheme.colorScheme.surface
             )
             
-            // 底层服务
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -199,7 +190,6 @@ fun StatusCard(
                 }
             }
             
-            // 内核注入
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -222,7 +212,6 @@ fun StatusCard(
                 }
             }
             
-            // 已启用功能标签云
             Text(
                 text = "启用功能: 设备伪装 • SELinux • SU权限 • 虚拟机隔离 • 日志管控 • 分区挂载",
                 fontSize = 12.sp,
