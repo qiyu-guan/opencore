@@ -51,9 +51,9 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text("OpenCore 控制中心", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text("OpenCore 控制中心", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("OpenCore v13.0 | 53项特性", fontSize = 12.sp)
+        Text("OpenCore v13.0 | 53项特性", fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
         Spacer(modifier = Modifier.height(8.dp))
 
         if (!RootManager.isRooted()) {
@@ -72,12 +72,12 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
 
         val progressValue = engineStatus.enabledFeaturesCount.toFloat() / engineStatus.totalFeatures.toFloat()
         Text("已启用 ${engineStatus.enabledFeaturesCount}/${engineStatus.totalFeatures}", fontSize = 12.sp, color = TechBlue)
-        LinearProgressIndicator(progress = { progressValue }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)), color = TechBlue)
+        LinearProgressIndicator(progress = { progressValue }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)), color = TechBlue, trackColor = MaterialTheme.colorScheme.surfaceVariant)
         Spacer(modifier = Modifier.height(16.dp))
 
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("实时工作状态", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("实时工作状态", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(12.dp))
                 InfoRow("引擎负载", "${engineStatus.cpuLoad}%", TechBlue)
                 InfoRow("内核注入", if (engineStatus.isKprobeActive) "活跃" else "未激活", if (engineStatus.isKprobeActive) Color(0xFF10B981) else Color(0xFFEF4444))
@@ -89,7 +89,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
 
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Boot镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text("Boot镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(12.dp))
                 InfoRow("当前模式", engineStatus.bootMode, TechBlue)
                 InfoRow("镜像状态", engineStatus.bootStatus, if (engineStatus.bootStatus == "已修补") Color(0xFF10B981) else Color.Gray)
@@ -134,11 +134,11 @@ fun AnimatedLoadIndicator(load: Int) {
     Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("引擎负载", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text("引擎负载", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                 Text("$load%", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TechBlue)
             }
             Spacer(modifier = Modifier.height(4.dp))
-            LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = TechBlue)
+            LinearProgressIndicator(progress = { animatedProgress }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)), color = TechBlue, trackColor = MaterialTheme.colorScheme.surface)
         }
     }
 }

@@ -159,10 +159,10 @@ fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, 
     } else {
         LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(modules) { module ->
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))) {
                     Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(module.name, fontWeight = FontWeight.Medium)
+                            Text(module.name, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                             Text(module.id, fontSize = 11.sp, color = Color.Gray)
                             Text(module.version, fontSize = 10.sp, color = Color.Gray)
                         }
@@ -190,17 +190,17 @@ fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) 
     val remoteModules = ModuleRepository.availableModules
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(remoteModules) { module ->
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))) {
                 Row(modifier = Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(module.name, fontWeight = FontWeight.Medium)
+                        Text(module.name, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
                         Text(module.description, fontSize = 12.sp, color = Color.Gray)
-                        Text("版本: ${module.version}", fontSize = 10.sp)
+                        Text("版本: ${module.version}", fontSize = 10.sp, color = Color.Gray)
                     }
                     Button(onClick = { onInstall(module) }, colors = ButtonDefaults.buttonColors(containerColor = TechBlue), shape = RoundedCornerShape(12.dp)) {
                         Icon(Icons.Default.Download, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("安装", fontSize = 12.sp)
+                        Text("安装", fontSize = 12.sp, color = Color.White)
                     }
                 }
             }
