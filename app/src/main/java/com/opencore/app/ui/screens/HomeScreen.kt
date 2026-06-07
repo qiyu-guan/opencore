@@ -1,32 +1,54 @@
 package com.opencore.app.ui.screens
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import kotlinx.coroutines.launch
+import com.opencore.app.engine.OpenCoreEngine
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
+import com.opencore.app.utils.RootManager
+import com.opencore.app.utils.LogHelper
 
 @Composable
 fun HomeScreen(themeViewModel: ThemeViewModel) {
-    var engineLoad by remember { mutableStateOf(36) }
-    var isServiceRunning by remember { mutableStateOf(true) }
-    var isKprobeActive by remember { mutableStateOf(true) }
-    var enabledFeatures by remember { mutableStateOf(48) }
-    var bootMode by remember { mutableStateOf("Magisk模块模式") }
-    var bootStatus by remember { mutableStateOf("未修补") }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    val engineStatus by OpenCoreEngine.status.collectAsState()
+    
     var patchProgress by remember { mutableStateOf(0) }
-    val totalFeatures = 53
-    val progressValue = enabledFeatures.toFloat() / totalFeatures.toFloat()
-    val engineProgress = engineLoad.toFloat() / 100f
+    var isPatching by remember { mutableStateOf(false) }
+    var showRootDialog by remember { mutableStateOf(false) }
+    
+    // 启动引擎监控
+    LaunchedEffect(Unit) {
+        OpenCoreEngine.startMonitoring()
+        lifecycleOwner.lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+            override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+                OpenCoreEngine.stopMonitoring()
+            }
+        })
+    }
+    
+    // 请求 Root 权限
+    LaunchedEffect(Unit) {
+        if (!RootManager.isRooted()) {
+            showRootDialog = true
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -43,86 +65,70 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "OpenCore v2.0 Native Engine | 运行中 | 53项特性",
+            text = "OpenCore v7.0 Native Engine | 运行中 | 53项特性",
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
         )
         Spacer(modifier = Modifier.height(8.dp))
         
+        // Root 状态提示
+        if (!RootManager.isRooted()) {
+            Surface(
+                color = Color(0xFFEF4444).copy(alpha = 0.2f),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "⚠️ 未检测到 Root 权限，部分功能不可用",
+                    fontSize = 12.sp,
+                    color = Color(0xFFEF4444),
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+        
+        // 实时负载动画
+        AnimatedLoadIndicator(engineStatus.cpuLoad)
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // 启用率进度条
+        val progressValue = engineStatus.enabledFeaturesCount.toFloat() / engineStatus.totalFeatures.toFloat()
         Text(
-            text = "已启用 $enabledFeatures/$totalFeatures",
+            text = "已启用 ${engineStatus.enabledFeaturesCount}/${engineStatus.totalFeatures}",
             fontSize = 12.sp,
             color = TechBlue
         )
-        
         LinearProgressIndicator(
             progress = { progressValue },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
+            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
             color = TechBlue,
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
         
-        // 状态卡片
+        // 实时状态卡片
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-            )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "实时工作状态",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Text("实时工作状态", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                Text(
-                    text = "引擎负载: $engineLoad%",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-                
-                LinearProgressIndicator(
-                    progress = { engineProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp)),
-                    color = TechBlue,
-                    trackColor = MaterialTheme.colorScheme.surface
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                val serviceText = if (isServiceRunning) "运行中" else "已停止"
-                val serviceColor = if (isServiceRunning) SuccessGreen else ErrorRed
-                Text(
-                    text = "底层服务: $serviceText",
-                    fontSize = 14.sp,
-                    color = serviceColor
-                )
+                InfoRow("引擎负载", "${engineStatus.cpuLoad}%", TechBlue)
                 Spacer(modifier = Modifier.height(4.dp))
-                
-                val kprobeText = if (isKprobeActive) "活跃" else "未激活"
-                val kprobeColor = if (isKprobeActive) SuccessGreen else ErrorRed
-                Text(
-                    text = "内核注入: $kprobeText",
-                    fontSize = 14.sp,
-                    color = kprobeColor
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Text(
-                    text = "启用功能: 设备伪装 • SELinux • SU权限 • 虚拟机隔离",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
-                )
+                InfoRow("底层服务", if (engineStatus.isServiceRunning) "运行中" else "已停止", 
+                    if (engineStatus.isServiceRunning) Color(0xFF10B981) else Color(0xFFEF4444))
+                Spacer(modifier = Modifier.height(4.dp))
+                InfoRow("内核注入", if (engineStatus.isKprobeActive) "活跃" else "未激活",
+                    if (engineStatus.isKprobeActive) Color(0xFF10B981) else Color(0xFFEF4444))
+                Spacer(modifier = Modifier.height(4.dp))
+                InfoRow("SELinux", engineStatus.selinuxMode,
+                    if (engineStatus.selinuxMode == "Enforcing") Color(0xFFF59E0B) else Color(0xFF10B981))
+                Spacer(modifier = Modifier.height(4.dp))
+                InfoRow("内核版本", engineStatus.kernelVersion, Color.Gray)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -131,76 +137,128 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
-            )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Boot镜像管理",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Text("Boot镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                Text(
-                    text = "当前模式: $bootMode",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
+                InfoRow("当前模式", engineStatus.bootMode, TechBlue)
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                val bootColor = if (bootStatus == "已修补") SuccessGreen else Color.Gray
-                Text(
-                    text = "镜像状态: $bootStatus",
-                    fontSize = 14.sp,
-                    color = bootColor
-                )
+                val bootColor = if (engineStatus.bootStatus == "已修补") Color(0xFF10B981) else Color.Gray
+                InfoRow("镜像状态", engineStatus.bootStatus, bootColor)
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                if (patchProgress > 0 && patchProgress < 100) {
-                    val patchProgressValue = patchProgress.toFloat() / 100f
+                if (isPatching) {
                     LinearProgressIndicator(
-                        progress = { patchProgressValue },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
+                        progress = { patchProgress / 100f },
+                        modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)),
                         color = TechBlue
+                    )
+                    Text(
+                        text = "修补进度: $patchProgress%",
+                        fontSize = 11.sp,
+                        color = TechBlue,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 
                 Button(
                     onClick = {
-                        patchProgress = 100
-                        bootStatus = "已修补"
+                        if (RootManager.isRooted()) {
+                            scope.launch {
+                                isPatching = true
+                                val success = OpenCoreEngine.patchBootImage { progress ->
+                                    patchProgress = progress
+                                }
+                                isPatching = false
+                                if (success) {
+                                    patchProgress = 100
+                                }
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = TechBlue
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                    colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = !isPatching && RootManager.isRooted()
                 ) {
-                    Text(
-                        text = "一键修补 Boot 镜像",
-                        color = Color.White
-                    )
+                    Text(if (isPatching) "修补中..." else "一键修补 Boot 镜像", color = Color.White)
                 }
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "OpenCore v2.0.0 | Build 2026.06",
+            text = "OpenCore v7.0.0 | 真实 Root 交互 | 实时负载监控",
             fontSize = 10.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f),
             modifier = Modifier.fillMaxWidth()
         )
     }
+    
+    // Root 权限请求对话框
+    if (showRootDialog) {
+        AlertDialog(
+            onDismissRequest = { showRootDialog = false },
+            title = { Text("需要 Root 权限") },
+            text = { Text("OpenCore 需要 Root 权限才能完整运行。请确保设备已 Root 并授予权限。") },
+            confirmButton = {
+                TextButton(onClick = { 
+                    showRootDialog = false
+                    scope.launch {
+                        OpenCoreEngine.requestRootPermission { granted ->
+                            if (granted) {
+                                LogHelper.addLog("HomeScreen", "Root 权限已授予")
+                            }
+                        }
+                    }
+                }) {
+                    Text("我知道了", color = TechBlue)
+                }
+            }
+        )
+    }
 }
 
-// 定义颜色常量（避免重复导入）
-private val SuccessGreen = Color(0xFF10B981)
-private val ErrorRed = Color(0xFFEF4444)
+@Composable
+fun InfoRow(label: String, value: String, valueColor: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+        Text(value, fontSize = 14.sp, color = valueColor, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+fun AnimatedLoadIndicator(load: Int) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = load / 100f,
+        animationSpec = tween(500),
+        label = "load"
+    )
+    
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("引擎负载", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text("$load%", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TechBlue)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            LinearProgressIndicator(
+                progress = { animatedProgress },
+                modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                color = TechBlue,
+                trackColor = MaterialTheme.colorScheme.surface
+            )
+        }
+    }
+}

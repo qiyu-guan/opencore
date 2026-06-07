@@ -68,3 +68,7 @@ dependencies {
     
     debugImplementation 'androidx.compose.ui:ui-tooling'
 }
+
+// Root 权限库
+implementation 'com.github.topjohnwu.libsu:core:5.2.2'
+implementation 'com.github.topjohnwu.libsu:io:5.2.2'

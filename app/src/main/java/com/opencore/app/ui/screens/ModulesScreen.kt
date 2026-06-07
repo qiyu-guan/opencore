@@ -14,91 +14,73 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.opencore.app.engine.ModuleManager
+import com.opencore.app.engine.Module
 import com.opencore.app.ui.theme.TechBlue
-
-data class ModuleItem(
-    val id: Int,
-    val name: String,
-    val desc: String,
-    val group: String,
-    var enabled: Boolean,
-    val icon: ImageVector
-)
+import com.opencore.app.utils.RootManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun ModulesScreen() {
-    var modules by remember {
-        mutableStateOf(
-            listOf(
-                ModuleItem(0, "设备伪装", "修改系统设备参数绕过检测", "device", false, Icons.Default.DeviceHub),
-                ModuleItem(1, "内核管控", "kprobe注入与内核权限认证", "kernel", true, Icons.Default.Memory),
-                ModuleItem(2, "SELinux规则", "动态放行/拦截SELinux权限", "selinux", false, Icons.Default.Security),
-                ModuleItem(3, "SU权限体系", "自研Root权限管理", "selinux", true, Icons.Default.AdminPanelSettings),
-                ModuleItem(4, "虚拟机隔离", "应用运行环境隔离防检测", "selinux", false, Icons.Default.Storage),
-                ModuleItem(5, "日志管控", "屏蔽系统日志输出", "system", true, Icons.Default.ListAlt),
-                ModuleItem(6, "分区挂载引擎", "自定义分区挂载与卸载", "system", false, Icons.Default.SdStorage),
-                ModuleItem(7, "OTA拦截", "屏蔽系统OTA升级", "system", true, Icons.Default.Update),
-                ModuleItem(8, "缓存清理", "自动清理系统缓存", "system", false, Icons.Default.CleaningServices),
-                ModuleItem(9, "分区修复", "自动修复分区异常", "system", false, Icons.Default.BugReport)
-            )
-        )
-    }
-    
-    val groupedModules = modules.groupBy { it.group }
-    val groupTitles = mapOf(
-        "device" to "设备伪装组",
-        "kernel" to "内核管控组",
-        "selinux" to "SELinux与权限组",
-        "system" to "系统维护组"
-    )
+    val scope = rememberCoroutineScope()
+    val modules = remember { ModuleManager.getAllModules().toMutableStateList() }
+    val groupedModules = remember(modules) { ModuleManager.getModulesByCategory() }
     
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        groupedModules.forEach { (group, groupModules) ->
+        groupedModules.forEach { (category, categoryModules) ->
             item {
                 Text(
-                    text = groupTitles[group] ?: group,
+                    text = category,
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    color = TechBlue,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }
             
-            items(groupModules) { module ->
+            items(categoryModules) { module ->
                 ModuleCard(
                     module = module,
                     onToggle = { enabled ->
-                        modules = modules.map {
-                            if (it.id == module.id) it.copy(enabled = enabled) else it
+                        scope.launch {
+                            val success = ModuleManager.setModuleEnabled(module.id, enabled)
+                            if (success) {
+                                val index = modules.indexOfFirst { it.id == module.id }
+                                if (index >= 0) {
+                                    modules[index] = modules[index].copy(isEnabled = enabled)
+                                }
+                            }
                         }
                     }
                 )
             }
         }
+        
+        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
 @Composable
 fun ModuleCard(
-    module: ModuleItem,
+    module: Module,
     onToggle: (Boolean) -> Unit
 ) {
-    var checked by remember(module.enabled) { mutableStateOf(module.enabled) }
+    var isEnabled by remember(module.isEnabled) { mutableStateOf(module.isEnabled) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = if (isEnabled) TechBlue.copy(alpha = 0.15f) 
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -108,9 +90,9 @@ fun ModuleCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Icon(
-                    imageVector = module.icon,
+                    imageVector = getModuleIcon(module.id),
                     contentDescription = null,
-                    tint = if (checked) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    tint = if (isEnabled) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                     modifier = Modifier.size(28.dp)
                 )
                 Column {
@@ -121,26 +103,53 @@ fun ModuleCard(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = module.desc,
+                        text = module.description,
                         fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        maxLines = 1
                     )
                 }
             }
             
-            Switch(
-                checked = checked,
-                onCheckedChange = {
-                    checked = it
-                    onToggle(it)
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = TechBlue,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+            if (module.needsRoot && !RootManager.isRooted()) {
+                Icon(Icons.Default.Lock, contentDescription = "需要Root", tint = Color.Gray, modifier = Modifier.size(20.dp))
+            } else {
+                Switch(
+                    checked = isEnabled,
+                    onCheckedChange = { 
+                        isEnabled = it
+                        onToggle(it)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = TechBlue,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                    )
                 )
-            )
+            }
         }
+    }
+}
+
+@Composable
+fun getModuleIcon(id: Int): ImageVector {
+    return when (id) {
+        0 -> Icons.Default.DeviceHub
+        1 -> Icons.Default.Memory
+        2 -> Icons.Default.Security
+        3 -> Icons.Default.AdminPanelSettings
+        4 -> Icons.Default.Storage
+        5 -> Icons.Default.ListAlt
+        6 -> Icons.Default.SdStorage
+        7 -> Icons.Default.Update
+        8 -> Icons.Default.CleaningServices
+        9 -> Icons.Default.BugReport
+        10 -> Icons.Default.Code
+        11 -> Icons.Default.VisibilityOff
+        12 -> Icons.Default.Wifi
+        13 -> Icons.Default.Extension
+        14 -> Icons.Default.Plugin
+        else -> Icons.Default.Apps
     }
 }
