@@ -50,7 +50,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
     ) {
         Text("OpenCore 控制中心", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("OpenCore v13.0 | 53项特性", fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+        Text("OpenCore v14.0 | 53项特性", fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
         Spacer(modifier = Modifier.height(8.dp))
 
         if (!RootManager.isRooted()) {
@@ -113,7 +113,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text("OpenCore v13.0 | 稳定版", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.fillMaxWidth())
+        Text("OpenCore v14.0 | 稳定版", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.fillMaxWidth())
     }
 }
 
