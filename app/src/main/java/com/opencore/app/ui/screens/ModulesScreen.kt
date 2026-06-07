@@ -118,7 +118,7 @@ fun ModulesScreen() {
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "导入本地模块")
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "导入本地模块")
                 }
             }
         }
@@ -171,7 +171,7 @@ fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, 
                                 if (success) onRefresh()
                             }
                         }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("卸载", fontSize = 12.sp)
                         }
@@ -195,7 +195,7 @@ fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) 
                         Text("版本: ${module.version}", fontSize = 10.sp, color = Color.Gray)
                     }
                     Button(onClick = { onInstall(module) }, colors = ButtonDefaults.buttonColors(containerColor = TechBlue), shape = RoundedCornerShape(12.dp)) {
-                        Icon(Icons.Default.Download, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Default.Download, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("安装", fontSize = 12.sp, color = Color.White)
                     }
