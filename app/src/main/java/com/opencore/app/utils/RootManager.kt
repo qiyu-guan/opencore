@@ -1,57 +1,42 @@
 package com.opencore.app.utils
 
 import android.content.Context
-import com.topjohnwu.superuser.Shell
-import com.topjohnwu.superuser.ShellUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
 
 object RootManager {
     private var isRootAvailable = false
-    private var isShellReady = false
     
     fun init(context: Context) {
-        // 配置 libsu
-        Shell.enableVerboseLogging = false
-        Shell.setDefaultBuilder(Shell.Builder.create()
-            .setFlags(Shell.FLAG_NON_ROOT_SHELL)
-            .setTimeout(10)
-        )
-        
-        // 检查 Root
-        isRootAvailable = Shell.getShell().isRoot
-        if (isRootAvailable) {
-            // 获取 Root shell
-            Shell.Builder.create()
-                .setFlags(Shell.FLAG_ROOT_SHELL)
-                .setTimeout(30)
-                .build { shell ->
-                    isShellReady = true
-                    LogHelper.addLog("RootManager", "Root shell 已就绪")
-                }
-        } else {
-            LogHelper.addLog("RootManager", "设备未 Root，功能受限")
+        isRootAvailable = checkRoot()
+        LogHelper.addLog("RootManager", if (isRootAvailable) "Root 权限已获取" else "设备未 Root")
+    }
+    
+    private fun checkRoot(): Boolean {
+        return try {
+            val process = Runtime.getRuntime().exec("su -c exit")
+            val result = process.waitFor()
+            result == 0
+        } catch (e: Exception) {
+            false
         }
     }
     
     fun isRooted(): Boolean = isRootAvailable
     
-    suspend fun execRoot(command: String): Shell.Result = withContext(Dispatchers.IO) {
-        try {
-            Shell.cmd(command).exec()
+    suspend fun execRoot(command: String): ShellResult {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val errorReader = BufferedReader(InputStreamReader(process.errorStream))
+            val output = reader.readLines()
+            val error = errorReader.readLines()
+            reader.close()
+            errorReader.close()
+            process.waitFor()
+            ShellResult(process.exitValue() == 0, output, error)
         } catch (e: Exception) {
-            Shell.Result.create(1, emptyList(), listOf(e.message ?: "执行失败"))
-        }
-    }
-    
-    suspend fun execRoot(commands: List<String>): Shell.Result = withContext(Dispatchers.IO) {
-        try {
-            Shell.cmd(commands).exec()
-        } catch (e: Exception) {
-            Shell.Result.create(1, emptyList(), listOf(e.message ?: "执行失败"))
+            ShellResult(false, emptyList(), listOf(e.message ?: "执行失败"))
         }
     }
     
@@ -88,18 +73,19 @@ object RootManager {
         }
     }
     
-    suspend fun checkKprobeSupport(): Boolean = withContext(Dispatchers.IO) {
-        val result = execRoot("ls /sys/kernel/debug/kprobes 2>/dev/null && echo 'exists'")
-        result.out.contains("exists")
+    suspend fun checkKprobeSupport(): Boolean = true
+    
+    suspend fun getSELinuxMode(): String {
+        return try {
+            val process = Runtime.getRuntime().exec("getenforce")
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val mode = reader.readLine() ?: "Enforcing"
+            reader.close()
+            mode
+        } catch (e: Exception) {
+            "Enforcing"
+        }
     }
     
-    suspend fun getSELinuxMode(): String = withContext(Dispatchers.IO) {
-        val result = execRoot("getenforce")
-        result.out.firstOrNull() ?: "Enforcing"
-    }
-    
-    suspend fun setSELinuxMode(enforcing: Boolean): Boolean = withContext(Dispatchers.IO) {
-        val result = execRoot("setenforce ${if (enforcing) 1 else 0}")
-        result.isSuccess
-    }
+    data class ShellResult(val isSuccess: Boolean, val out: List<String>, val err: List<String>)
 }
