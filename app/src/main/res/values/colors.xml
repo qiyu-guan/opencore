@@ -1,45 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 基础主题色 -->
-    <color name="primary_blue">#2196F3</color>
-    <color name="primary_teal">#009688</color>
-    <color name="primary_purple">#9C27B0</color>
-    <color name="primary_indigo">#3F51B5</color>
-    <color name="primary_cyan">#00BCD4</color>
-    <color name="primary_orange">#FF9800</color>
-    <color name="primary_green">#4CAF50</color>
-    <color name="primary_red">#F44336</color>
-
-    <!-- 深色背景 -->
     <color name="dark_bg">#0A0E17</color>
-    <color name="card_bg">#1E2533</color>
-    <color name="card_bg_translucent">#1E2533CC</color>
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#B0BEC5</color>
-    <color name="text_hint">#607D8B</color>
-    <color name="border_color">#2A3441</color>
-
-    <!-- 兼容旧引用 -->
-    <color name="default_primary">#3F51B5</color>
-    <color name="default_accent">#FF4081</color>
-    <color name="default_background">#FFFFFF</color>
-    <color name="theme_red">#F44336</color>
-    <color name="theme_pink">#E91E63</color>
-    <color name="theme_purple">#9C27B0</color>
-    <color name="theme_deep_purple">#673AB7</color>
-    <color name="theme_indigo">#3F51B5</color>
-    <color name="theme_blue">#2196F3</color>
-    <color name="theme_light_blue">#03A9F4</color>
-    <color name="theme_cyan">#00BCD4</color>
-    <color name="theme_teal">#009688</color>
-    <color name="theme_green">#4CAF50</color>
-    <color name="theme_light_green">#8BC34A</color>
-    <color name="theme_lime">#CDDC39</color>
-    <color name="theme_yellow">#FFEB3B</color>
-    <color name="theme_amber">#FFC107</color>
-    <color name="theme_orange">#FF9800</color>
-    <color name="theme_deep_orange">#FF5722</color>
-    <color name="theme_brown">#795548</color>
-    <color name="theme_grey">#9E9E9E</color>
-    <color name="theme_blue_grey">#607D8B</color>
+    <color name="primary_blue">#2563EB</color>
 </resources>

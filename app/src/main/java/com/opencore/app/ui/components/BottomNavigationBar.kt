@@ -1,0 +1,73 @@
+package com.opencore.app.ui.components
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.opencore.app.R
+
+@Composable
+fun BottomNavigationBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val items = listOf("主页", "日志", "模块")
+    val icons = listOf(R.drawable.ic_home, R.drawable.ic_log, R.drawable.ic_modules)
+    
+    NavigationBar(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(32.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+        containerColor = Color.Transparent,
+        tonalElevation = 0.dp
+    ) {
+        items.forEachIndexed { index, title ->
+            val selected = selectedTab == index
+            val animatedColor = animateColorAsState(
+                targetValue = if (selected) TechBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                animationSpec = tween(200)
+            )
+            
+            NavigationBarItem(
+                selected = selected,
+                onClick = { onTabSelected(index) },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = icons[index]),
+                        contentDescription = title,
+                        tint = animatedColor.value,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                label = {
+                    Text(
+                        text = title,
+                        fontSize = 12.sp,
+                        color = animatedColor.value
+                    )
+                },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    selectedIndicatorColor = Color.Transparent
+                )
+            )
+        }
+    }
+}
+
+private val TechBlue = Color(0xFF2563EB)
