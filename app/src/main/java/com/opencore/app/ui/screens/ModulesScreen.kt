@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,22 +21,138 @@ import com.opencore.app.engine.ModuleManager
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.launch
+import android.widget.Toast
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun ModulesScreen() {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
     val modules = remember { ModuleManager.getAllModules().toMutableStateList() }
     val groupedModules = remember(modules) { ModuleManager.getModulesByCategory() }
     
-    val totalModules = modules.size
-    val enabledModules = modules.count { it.isEnabled }
-    val enabledPercent = if (totalModules > 0) (enabledModules * 100 / totalModules) else 0
+    var showRootRequestDialog by rememberSaveable { mutableStateOf(!RootManager.isRooted()) }
+    
+    // Root 权限请求启动器
+    val rootRequestLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // 权限请求返回后重新检查
+        scope.launch {
+            kotlinx.coroutines.delay(500)
+            if (RootManager.isRooted()) {
+                showRootRequestDialog = false
+                Toast.makeText(context, "Root 权限已获取", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Root 权限获取失败，请确保已安装 Magisk 并授权", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    // 请求 Root 权限
+    fun requestRoot(activity: androidx.activity.ComponentActivity) {
+        RootManager.requestRootPermission(activity) { granted ->
+            if (granted) {
+                showRootRequestDialog = false
+                Toast.makeText(context, "Root 权限已授予", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "需要 Root 权限才能导入模块", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 导入模块的方法
+    fun importModule(module: Module) {
+        scope.launch {
+            if (!RootManager.isRooted()) {
+                Toast.makeText(context, "请先授予 Root 权限", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            
+            // 模拟导入过程
+            Toast.makeText(context, "正在导入 ${module.name}...", Toast.LENGTH_SHORT).show()
+            kotlinx.coroutines.delay(1000)
+            
+            val success = ModuleManager.setModuleEnabled(module.id, true)
+            if (success) {
+                val index = modules.indexOfFirst { it.id == module.id }
+                if (index >= 0) modules[index] = modules[index].copy(isEnabled = true)
+                Toast.makeText(context, "${module.name} 导入成功", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "${module.name} 导入失败", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // 卸载模块
+    fun uninstallModule(module: Module) {
+        scope.launch {
+            if (!RootManager.isRooted()) {
+                Toast.makeText(context, "请先授予 Root 权限", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            
+            val success = ModuleManager.setModuleEnabled(module.id, false)
+            if (success) {
+                val index = modules.indexOfFirst { it.id == module.id }
+                if (index >= 0) modules[index] = modules[index].copy(isEnabled = false)
+                Toast.makeText(context, "${module.name} 已卸载", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "${module.name} 卸载失败", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Root 权限提示卡片
+        if (!RootManager.isRooted()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFEF4444).copy(alpha = 0.15f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFEF4444))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("需要 Root 权限", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("导入模块需要 Root 权限，请点击下方按钮授权", fontSize = 13.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = {
+                                val activity = context as? androidx.activity.ComponentActivity
+                                if (activity != null) {
+                                    requestRoot(activity)
+                                } else {
+                                    Toast.makeText(context, "无法获取 Activity", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.LockOpen, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("授予 Root 权限")
+                        }
+                    }
+                }
+            }
+        }
+        
         // 统计卡片
         item {
             Card(
@@ -46,96 +163,19 @@ fun ModulesScreen() {
                 )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("模块统计", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = TechBlue.copy(alpha = 0.15f)
-                        ) {
-                            Text(
-                                "共 $totalModules 个模块",
-                                fontSize = 12.sp,
-                                color = TechBlue,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
+                    Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("模块库", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Surface(shape = RoundedCornerShape(12.dp), color = TechBlue.copy(alpha = 0.15f)) {
+                            Text("共 ${modules.size} 个可用模块", fontSize = 12.sp, color = TechBlue, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("已启用", fontSize = 14.sp)
-                        Text(
-                            "$enabledModules / $totalModules",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TechBlue
-                        )
-                    }
-                    LinearProgressIndicator(
-                        progress = { enabledPercent / 100f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = TechBlue
-                    )
+                    Text("点击「导入」按钮将模块安装到系统中", fontSize = 12.sp, color = Color.Gray)
                 }
             }
         }
         
-        // 快速操作按钮
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            modules.forEach { module ->
-                                if (!module.isEnabled && (!module.needsRoot || RootManager.isRooted())) {
-                                    ModuleManager.setModuleEnabled(module.id, true)
-                                    val index = modules.indexOfFirst { it.id == module.id }
-                                    if (index >= 0) modules[index] = modules[index].copy(isEnabled = true)
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("全部启用", fontSize = 13.sp)
-                }
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            modules.forEach { module ->
-                                if (module.isEnabled) {
-                                    ModuleManager.setModuleEnabled(module.id, false)
-                                    val index = modules.indexOfFirst { it.id == module.id }
-                                    if (index >= 0) modules[index] = modules[index].copy(isEnabled = false)
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("全部禁用", fontSize = 13.sp)
-                }
-            }
-        }
-        
-        // 按分组显示模块
+        // 按分组显示可导入的模块
         groupedModules.forEach { (category, categoryModules) ->
             item {
                 Surface(
@@ -144,39 +184,20 @@ fun ModulesScreen() {
                     color = TechBlue.copy(alpha = 0.1f)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(category, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = TechBlue)
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = TechBlue.copy(alpha = 0.2f)
-                        ) {
-                            Text(
-                                "${categoryModules.count { it.isEnabled }}/${categoryModules.size}",
-                                fontSize = 11.sp,
-                                color = TechBlue,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
+                        Text("${categoryModules.count { it.isEnabled }} 已导入", fontSize = 12.sp, color = TechBlue)
                     }
                 }
             }
             
             items(categoryModules) { module ->
-                ModuleCard(
+                ModuleImportCard(
                     module = module,
-                    onToggle = { enabled ->
-                        scope.launch {
-                            val success = ModuleManager.setModuleEnabled(module.id, enabled)
-                            if (success) {
-                                val index = modules.indexOfFirst { it.id == module.id }
-                                if (index >= 0) modules[index] = modules[index].copy(isEnabled = enabled)
-                            }
-                        }
-                    }
+                    onImport = { importModule(module) },
+                    onUninstall = { uninstallModule(module) }
                 )
             }
         }
@@ -184,17 +205,18 @@ fun ModulesScreen() {
 }
 
 @Composable
-fun ModuleCard(
+fun ModuleImportCard(
     module: Module,
-    onToggle: (Boolean) -> Unit
+    onImport: () -> Unit,
+    onUninstall: () -> Unit
 ) {
-    var isEnabled by remember(module.isEnabled) { mutableStateOf(module.isEnabled) }
+    val isImported = module.isEnabled
     
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isEnabled) TechBlue.copy(alpha = 0.12f)
+            containerColor = if (isImported) TechBlue.copy(alpha = 0.12f)
             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         )
     ) {
@@ -210,24 +232,21 @@ fun ModuleCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // 图标容器 - 使用 Card 代替 Box + background
+                // 图标
                 Card(
                     modifier = Modifier.size(40.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isEnabled) TechBlue.copy(alpha = 0.15f)
+                        containerColor = if (isImported) TechBlue.copy(alpha = 0.15f)
                         else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
                             getModuleIcon(module.id),
                             contentDescription = null,
-                            tint = if (isEnabled) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                            tint = if (isImported) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -238,7 +257,7 @@ fun ModuleCard(
                         module.name,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isEnabled) TechBlue else MaterialTheme.colorScheme.onBackground
+                        color = if (isImported) TechBlue else MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         module.description,
@@ -249,25 +268,30 @@ fun ModuleCard(
                 }
             }
             
-            if (module.needsRoot && !RootManager.isRooted()) {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = "需要Root",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
-                )
-            } else {
-                Switch(
-                    checked = isEnabled,
-                    onCheckedChange = { newValue ->
-                        isEnabled = newValue
-                        onToggle(newValue)
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = TechBlue
+            // 导入/卸载按钮
+            if (isImported) {
+                OutlinedButton(
+                    onClick = onUninstall,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFEF4444)
                     )
-                )
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("卸载", fontSize = 12.sp)
+                }
+            } else {
+                Button(
+                    onClick = onImport,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                    modifier = Modifier.width(80.dp)
+                ) {
+                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("导入", fontSize = 12.sp)
+                }
             }
         }
     }

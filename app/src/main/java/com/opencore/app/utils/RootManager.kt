@@ -1,11 +1,18 @@
 package com.opencore.app.utils
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContract
+import android.content.pm.PackageManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object RootManager {
     private var isRootAvailable = false
+    private var hasRequested = false
     
     fun init(context: Context) {
         isRootAvailable = checkRoot()
@@ -24,6 +31,38 @@ object RootManager {
     
     fun isRooted(): Boolean = isRootAvailable
     
+    /**
+     * 主动请求 Root 权限（通过 su 交互）
+     */
+    fun requestRootPermission(activity: Activity, onResult: (Boolean) -> Unit) {
+        if (isRootAvailable) {
+            onResult(true)
+            return
+        }
+        
+        try {
+            // 弹出 su 授权窗口
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val output = reader.readText()
+            reader.close()
+            val result = process.waitFor()
+            
+            isRootAvailable = result == 0 && output.contains("uid=0")
+            onResult(isRootAvailable)
+            LogHelper.addLog("RootManager", "Root 权限请求结果: $isRootAvailable")
+        } catch (e: Exception) {
+            // 如果没有 su，引导用户安装 Magisk
+            showMagiskGuide(activity)
+            onResult(false)
+        }
+    }
+    
+    private fun showMagiskGuide(activity: Activity) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/topjohnwu/Magisk/releases"))
+        activity.startActivity(intent)
+    }
+    
     suspend fun execRoot(command: String): ShellResult {
         return try {
             val process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
@@ -37,53 +76,6 @@ object RootManager {
             ShellResult(process.exitValue() == 0, output, error)
         } catch (e: Exception) {
             ShellResult(false, emptyList(), listOf(e.message ?: "执行失败"))
-        }
-    }
-    
-    fun getCpuUsage(): Int {
-        return try {
-            val process = Runtime.getRuntime().exec("top -b -n 1 -d 1")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String?
-            var cpuLine = ""
-            while (reader.readLine().also { line = it } != null) {
-                if (line?.contains("%cpu") == true || line?.contains("CPU") == true) {
-                    cpuLine = line ?: ""
-                    break
-                }
-            }
-            reader.close()
-            val regex = Regex("(\\d+\\.?\\d*)%")
-            val match = regex.find(cpuLine)
-            match?.groupValues?.get(1)?.toFloatOrNull()?.toInt() ?: (10..40).random()
-        } catch (e: Exception) {
-            (10..40).random()
-        }
-    }
-    
-    fun getKernelVersion(): String {
-        return try {
-            val process = Runtime.getRuntime().exec("uname -r")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val version = reader.readLine() ?: "未知"
-            reader.close()
-            version
-        } catch (e: Exception) {
-            "未知"
-        }
-    }
-    
-    suspend fun checkKprobeSupport(): Boolean = true
-    
-    suspend fun getSELinuxMode(): String {
-        return try {
-            val process = Runtime.getRuntime().exec("getenforce")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val mode = reader.readLine() ?: "Enforcing"
-            reader.close()
-            mode
-        } catch (e: Exception) {
-            "Enforcing"
         }
     }
     
