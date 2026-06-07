@@ -1,6 +1,5 @@
 package com.opencore.app.ui.screens
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,6 +36,7 @@ fun ModulesScreen() {
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // 统计卡片
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -47,9 +47,9 @@ fun ModulesScreen() {
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text("模块统计", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         Surface(
                             shape = RoundedCornerShape(12.dp),
@@ -88,6 +88,7 @@ fun ModulesScreen() {
             }
         }
         
+        // 快速操作按钮
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -134,6 +135,7 @@ fun ModulesScreen() {
             }
         }
         
+        // 按分组显示模块
         groupedModules.forEach { (category, categoryModules) ->
             item {
                 Surface(
@@ -208,23 +210,29 @@ fun ModuleCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isEnabled) TechBlue.copy(alpha = 0.15f)
-                            else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                        ),
-                    contentAlignment = Alignment.Center
+                // 图标容器 - 使用 Card 代替 Box + background
+                Card(
+                    modifier = Modifier.size(40.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isEnabled) TechBlue.copy(alpha = 0.15f)
+                        else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Icon(
-                        getModuleIcon(module.id),
-                        contentDescription = null,
-                        tint = if (isEnabled) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            getModuleIcon(module.id),
+                            contentDescription = null,
+                            tint = if (isEnabled) TechBlue else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
+                
                 Column {
                     Text(
                         module.name,
