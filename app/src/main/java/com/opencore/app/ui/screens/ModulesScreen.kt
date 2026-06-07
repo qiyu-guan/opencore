@@ -25,8 +25,6 @@ import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.launch
 import android.widget.Toast
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,8 +39,7 @@ fun ModulesScreen() {
     var installing by remember { mutableStateOf(false) }
     var installProgress by remember { mutableStateOf("") }
 
-    // 刷新模块列表
-    fun refreshModules() {
+    val refreshModules: () -> Unit = {
         scope.launch {
             isLoading = true
             ModuleManager.loadInstalledModules()

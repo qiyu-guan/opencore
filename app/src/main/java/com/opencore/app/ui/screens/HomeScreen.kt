@@ -17,9 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.opencore.app.engine.OpenCoreEngine
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
@@ -30,7 +27,6 @@ import android.widget.Toast
 @Composable
 fun HomeScreen(themeViewModel: ThemeViewModel) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     val engineStatus by OpenCoreEngine.status.collectAsState()
     var patchProgress by remember { mutableStateOf(0) }
@@ -38,11 +34,12 @@ fun HomeScreen(themeViewModel: ThemeViewModel) {
 
     LaunchedEffect(Unit) {
         OpenCoreEngine.startMonitoring()
-        lifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) {
-                OpenCoreEngine.stopMonitoring()
-            }
-        })
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            OpenCoreEngine.stopMonitoring()
+        }
     }
 
     Column(
