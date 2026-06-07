@@ -9,11 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ViewModule
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,10 +62,7 @@ fun BottomNavigationBar(
                         fontSize = 12.sp,
                         color = animatedColor.value
                     )
-                },
-                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                    selectedIndicatorColor = Color.Transparent
-                )
+                }
             )
         }
     }

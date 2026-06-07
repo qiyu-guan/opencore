@@ -24,6 +24,7 @@ import com.opencore.app.ui.screens.SettingsScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
+import com.opencore.app.ui.theme.ThemeViewModelFactory
 import com.opencore.app.utils.LogHelper
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +38,9 @@ class MainActivity : ComponentActivity() {
         LogHelper.init(this)
         
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel()
+            val themeViewModel: ThemeViewModel = viewModel(
+                factory = ThemeViewModelFactory(applicationContext)
+            )
             OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -73,7 +76,8 @@ class MainActivity : ComponentActivity() {
                     onClick = { navController.navigate("settings") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    modifier = Modifier.padding(end = 16.dp, top = 16.dp)
+                    modifier = Modifier
+                        .padding(end = 16.dp, top = 16.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -81,8 +85,7 @@ class MainActivity : ComponentActivity() {
                         tint = Color.White
                     )
                 }
-            },
-            floatingActionButtonPosition = FabPosition.EndTop
+            }
         ) { innerPadding ->
             NavHost(
                 navController = navController,

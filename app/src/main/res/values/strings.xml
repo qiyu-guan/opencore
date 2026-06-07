@@ -1,14 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenCore</string>
-    <string name="main_title">OpenCore 控制中心</string>
-    <string name="native_status">原生层状态: 已激活</string>
-    <string name="btn_settings">⚙️ 设置</string>
-    <string name="btn_logs">📋 查看日志</string>
-    <string name="setting_title">个性化设置</string>
-    <string name="setting_theme">主题颜色</string>
-    <string name="setting_log_auto_clear">自动清除日志(7天)</string>
-    <string name="log_title">运行日志</string>
-    <string name="log_empty">暂无日志，请返回主界面操作</string>
-    <string name="log_clear">清除日志</string>
-    <string name="toast_theme_changed">主题已更改，重启应用生效</string>
 </resources>
