@@ -5,20 +5,21 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.opencore.app.R
 import com.opencore.app.ui.theme.TechBlue
 
 @Composable
@@ -27,7 +28,11 @@ fun BottomNavigationBar(
     onTabSelected: (Int) -> Unit
 ) {
     val items = listOf("主页", "日志", "模块")
-    val icons = listOf(R.drawable.ic_home, R.drawable.ic_log, R.drawable.ic_modules)
+    val icons = listOf(
+        Icons.Default.Dashboard,
+        Icons.Default.List,
+        Icons.Default.ViewModule
+    )
     
     NavigationBar(
         modifier = Modifier
@@ -49,7 +54,7 @@ fun BottomNavigationBar(
                 onClick = { onTabSelected(index) },
                 icon = {
                     Icon(
-                        painter = painterResource(id = icons[index]),
+                        imageVector = icons[index],
                         contentDescription = title,
                         tint = animatedColor.value,
                         modifier = Modifier.size(24.dp)
