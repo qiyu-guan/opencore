@@ -63,42 +63,45 @@ object OpenCoreEngine {
 
     /**
      * 获取归一化 CPU 负载（0-100）
-     * 方法：读取 /proc/stat 计算 CPU 总时间与空闲时间的差值，得到真实使用率
      */
     private suspend fun getNormalizedCpuLoad(): Int = withContext(Dispatchers.IO) {
         try {
             fun readCpuStat(): Pair<Long, Long>? {
-                val reader = BufferedReader(InputStreamReader(Runtime.getRuntime().exec("cat /proc/stat").inputStream))
-                val line = reader.readLine() ?: return null
+                val process = Runtime.getRuntime().exec("cat /proc/stat")
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                val line = reader.readLine()
                 reader.close()
+                process.destroy()
+                if (line == null || !line.startsWith("cpu")) return null
                 val parts = line.trim().split(Regex("\\s+"))
-                if (parts[0] != "cpu") return null
-                // user, nice, system, idle, iowait, irq, softirq, steal
-                val user = parts[1].toLong()
-                val nice = parts[2].toLong()
-                val system = parts[3].toLong()
-                val idle = parts[4].toLong()
-                val iowait = parts[5].toLong()
-                val irq = parts[6].toLong()
-                val softirq = parts[7].toLong()
+                if (parts.size < 8) return null
+                val user = parts[1].toLongOrNull() ?: return null
+                val nice = parts[2].toLongOrNull() ?: return null
+                val system = parts[3].toLongOrNull() ?: return null
+                val idle = parts[4].toLongOrNull() ?: return null
+                val iowait = parts[5].toLongOrNull() ?: return null
+                val irq = parts[6].toLongOrNull() ?: return null
+                val softirq = parts[7].toLongOrNull() ?: return null
                 val total = user + nice + system + idle + iowait + irq + softirq
                 val idleTotal = idle + iowait
                 return Pair(total, idleTotal)
             }
 
-            val first = readCpuStat() ?: return 10
+            val first = readCpuStat()
+            if (first == null) return@withContext 10
             delay(500)
-            val second = readCpuStat() ?: return 10
+            val second = readCpuStat()
+            if (second == null) return@withContext 10
 
             val totalDiff = second.first - first.first
             val idleDiff = second.second - first.second
-            if (totalDiff <= 0) return 10
+            if (totalDiff <= 0) return@withContext 10
 
-            val usage = (1.0 - idleDiff.toDouble() / totalDiff) * 100
-            usage.toInt().coerceIn(0, 100)
+            val usage = ((1.0 - idleDiff.toDouble() / totalDiff) * 100).toInt()
+            return@withContext usage.coerceIn(0, 100)
         } catch (e: Exception) {
             LogHelper.addLog("Engine", "CPU 解析失败: ${e.message}")
-            10
+            return@withContext 10
         }
     }
 
@@ -106,7 +109,10 @@ object OpenCoreEngine {
         try {
             val proc = Runtime.getRuntime().exec("uname -r")
             val reader = BufferedReader(InputStreamReader(proc.inputStream))
-            reader.readLine() ?: "未知"
+            val version = reader.readLine() ?: "未知"
+            reader.close()
+            proc.destroy()
+            version
         } catch (e: Exception) { "未知" }
     }
 
@@ -114,7 +120,10 @@ object OpenCoreEngine {
         try {
             val proc = Runtime.getRuntime().exec("getenforce")
             val reader = BufferedReader(InputStreamReader(proc.inputStream))
-            reader.readLine() ?: "Enforcing"
+            val mode = reader.readLine() ?: "Enforcing"
+            reader.close()
+            proc.destroy()
+            mode
         } catch (e: Exception) { "Enforcing" }
     }
 
@@ -132,7 +141,11 @@ object OpenCoreEngine {
         return withContext(Dispatchers.IO) {
             try {
                 onProgress(10)
-                val bootDevice = getBootDevice() ?: return@withContext false
+                val bootDevice = getBootDevice()
+                if (bootDevice == null) {
+                    onProgress(0)
+                    return@withContext false
+                }
                 onProgress(20)
                 RootManager.execRoot("dd if=$bootDevice of=/data/local/tmp/boot_backup.img")
                 onProgress(40)
