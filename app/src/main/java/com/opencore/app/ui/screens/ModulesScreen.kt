@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -118,7 +116,7 @@ fun ModulesScreen() {
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "导入本地模块")
+                    Text("➕", fontSize = 20.sp)
                 }
             }
         }
@@ -171,7 +169,7 @@ fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, 
                                 if (success) onRefresh()
                             }
                         }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text("🗑️", modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("卸载", fontSize = 12.sp)
                         }
@@ -195,7 +193,7 @@ fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) 
                         Text("版本: ${module.version}", fontSize = 10.sp, color = Color.Gray)
                     }
                     Button(onClick = { onInstall(module) }, colors = ButtonDefaults.buttonColors(containerColor = TechBlue), shape = RoundedCornerShape(12.dp)) {
-                        Icon(Icons.Default.Download, modifier = Modifier.size(16.dp))
+                        Text("⬇️", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("安装", fontSize = 12.sp, color = Color.White)
                     }
