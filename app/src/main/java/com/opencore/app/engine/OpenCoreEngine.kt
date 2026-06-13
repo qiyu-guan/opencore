@@ -48,7 +48,7 @@ object OpenCoreEngine {
     }
 
     private suspend fun updateStatus() {
-        val cpu = getCpuUsage()
+        val cpu = getNormalizedCpuLoad()
         val kernel = getKernelVersion()
         val selinux = getSELinuxMode()
         val kprobe = RootManager.execRoot("ls /sys/kernel/debug/kprobes 2>/dev/null").isSuccess
@@ -61,23 +61,45 @@ object OpenCoreEngine {
         )
     }
 
-    private suspend fun getCpuUsage(): Int = withContext(Dispatchers.IO) {
+    /**
+     * 获取归一化 CPU 负载（0-100）
+     * 方法：读取 /proc/stat 计算 CPU 总时间与空闲时间的差值，得到真实使用率
+     */
+    private suspend fun getNormalizedCpuLoad(): Int = withContext(Dispatchers.IO) {
         try {
-            val proc = Runtime.getRuntime().exec("top -b -n 1 -d 1")
-            val reader = BufferedReader(InputStreamReader(proc.inputStream))
-            var line: String?
-            var cpuLine = ""
-            while (reader.readLine().also { line = it } != null) {
-                if (line?.contains("%cpu") == true || line?.contains("CPU") == true) {
-                    cpuLine = line ?: ""
-                    break
-                }
+            fun readCpuStat(): Pair<Long, Long>? {
+                val reader = BufferedReader(InputStreamReader(Runtime.getRuntime().exec("cat /proc/stat").inputStream))
+                val line = reader.readLine() ?: return null
+                reader.close()
+                val parts = line.trim().split(Regex("\\s+"))
+                if (parts[0] != "cpu") return null
+                // user, nice, system, idle, iowait, irq, softirq, steal
+                val user = parts[1].toLong()
+                val nice = parts[2].toLong()
+                val system = parts[3].toLong()
+                val idle = parts[4].toLong()
+                val iowait = parts[5].toLong()
+                val irq = parts[6].toLong()
+                val softirq = parts[7].toLong()
+                val total = user + nice + system + idle + iowait + irq + softirq
+                val idleTotal = idle + iowait
+                return Pair(total, idleTotal)
             }
-            reader.close()
-            val regex = Regex("(\\d+\\.?\\d*)%")
-            val match = regex.find(cpuLine)
-            match?.groupValues?.get(1)?.toFloatOrNull()?.toInt() ?: (10..40).random()
-        } catch (e: Exception) { (10..40).random() }
+
+            val first = readCpuStat() ?: return 10
+            delay(500)
+            val second = readCpuStat() ?: return 10
+
+            val totalDiff = second.first - first.first
+            val idleDiff = second.second - first.second
+            if (totalDiff <= 0) return 10
+
+            val usage = (1.0 - idleDiff.toDouble() / totalDiff) * 100
+            usage.toInt().coerceIn(0, 100)
+        } catch (e: Exception) {
+            LogHelper.addLog("Engine", "CPU 解析失败: ${e.message}")
+            10
+        }
     }
 
     private suspend fun getKernelVersion(): String = withContext(Dispatchers.IO) {
