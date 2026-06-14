@@ -1,4 +1,3 @@
-import kotlinx.coroutines.delay
 package com.opencore.app.engine
 
 import android.content.ContentResolver
@@ -7,6 +6,7 @@ import android.net.Uri
 import com.opencore.app.utils.LogHelper
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.zip.ZipFile
@@ -19,7 +19,6 @@ object ModuleInstaller {
         }
         return withContext(Dispatchers.IO) {
             try {
-                // 1. 复制到缓存目录
                 onProgress("复制模块文件...")
                 val cachedFile = File(context.cacheDir, "temp_module_${System.currentTimeMillis()}.zip")
                 context.contentResolver.openInputStream(zipUri)?.use { input ->
@@ -28,29 +27,23 @@ object ModuleInstaller {
                     }
                 } ?: throw Exception("无法读取 zip 文件")
 
-                // 2. 解压到临时目录
                 onProgress("解压模块...")
                 val tempDir = "/data/local/tmp/module_install"
                 RootManager.execRoot("rm -rf $tempDir; mkdir -p $tempDir")
                 val unzipResult = RootManager.execRoot("unzip ${cachedFile.absolutePath} -d $tempDir")
                 if (!unzipResult.isSuccess) throw Exception("解压失败: ${unzipResult.err.joinToString()}")
 
-                // 3. 读取 module.prop 获取模块 ID
                 onProgress("读取模块信息...")
                 val moduleId = parseModuleId(tempDir) ?: throw Exception("缺少 module.prop 或 id 字段")
                 val moduleDest = "/data/adb/modules/$moduleId"
                 RootManager.execRoot("rm -rf $moduleDest; mkdir -p $moduleDest")
                 onProgress("安装到 $moduleDest")
 
-                // 4. 复制所有文件
                 val copyResult = RootManager.execRoot("cp -rf $tempDir/* $moduleDest/")
                 if (!copyResult.isSuccess) throw Exception("复制失败: ${copyResult.err.joinToString()}")
 
-                // 5. 设置权限
                 RootManager.execRoot("chmod 755 $moduleDest/customize.sh 2>/dev/null")
                 RootManager.execRoot("touch $moduleDest/update")
-
-                // 6. 清理临时文件
                 RootManager.execRoot("rm -rf $tempDir")
                 cachedFile.delete()
 
@@ -95,11 +88,7 @@ object ModuleInstaller {
             }
         }
     }
-}
 
-    /**
-     * 重启设备（需要 Root 权限）
-     */
     suspend fun rebootDevice(onProgress: (String) -> Unit): Boolean {
         if (!RootManager.isRooted()) {
             onProgress("需要 Root 权限才能重启")
@@ -108,7 +97,6 @@ object ModuleInstaller {
         return withContext(Dispatchers.IO) {
             try {
                 onProgress("正在重启设备...")
-                // 延迟1秒确保 Toast 显示
                 delay(1000)
                 val result = RootManager.execRoot("reboot")
                 if (result.isSuccess) {
@@ -124,10 +112,7 @@ object ModuleInstaller {
             }
         }
     }
-    
-    /**
-     * 软重启（只重启 SystemUI，更快）
-     */
+
     suspend fun softReboot(onProgress: (String) -> Unit): Boolean {
         if (!RootManager.isRooted()) {
             onProgress("需要 Root 权限")
@@ -150,3 +135,4 @@ object ModuleInstaller {
             }
         }
     }
+}

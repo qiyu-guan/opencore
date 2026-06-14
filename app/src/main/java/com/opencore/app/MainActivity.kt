@@ -1,4 +1,3 @@
-@OptIn(ExperimentalMaterial3Api::class)
 package com.opencore.app
 
 import android.os.Bundle
@@ -34,6 +33,7 @@ import com.opencore.app.ui.theme.ThemeViewModelFactory
 import com.opencore.app.utils.LogHelper
 import com.opencore.app.utils.RootManager
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
