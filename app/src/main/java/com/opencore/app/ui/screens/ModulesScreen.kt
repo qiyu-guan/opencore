@@ -111,7 +111,7 @@ fun ModulesScreen() {
         },
         floatingActionButton = {
             if (selectedTab == 0 && !installing) {
-                FloatingActionButton(modifier = Modifier.padding(16.dp))
+                FloatingActionButton(
                     onClick = { zipPickerLauncher.launch("application/zip") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape
@@ -161,14 +161,18 @@ fun InstalledModulesTab(modules: List<com.opencore.app.engine.InstalledModule>, 
                             Text(module.id, fontSize = 11.sp, color = Color.Gray)
                             Text(module.version, fontSize = 10.sp, color = Color.Gray)
                         }
-                        OutlinedButton(onClick = {
-                            scope.launch {
-                                val success = ModuleInstaller.uninstallModule(module.id) { msg ->
-                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        OutlinedButton(
+                            onClick = {
+                                scope.launch {
+                                    val success = ModuleInstaller.uninstallModule(module.id) { msg ->
+                                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                    }
+                                    if (success) onRefresh()
                                 }
-                                if (success) onRefresh()
-                            }
-                        }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))) {
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                        ) {
                             Text("🗑️", modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("卸载", fontSize = 12.sp)
@@ -192,7 +196,11 @@ fun OnlineModulesTab(onInstall: (com.opencore.app.engine.RemoteModule) -> Unit) 
                         Text(module.description, fontSize = 12.sp, color = Color.Gray)
                         Text("版本: ${module.version}", fontSize = 10.sp, color = Color.Gray)
                     }
-                    Button(onClick = { onInstall(module) }, colors = ButtonDefaults.buttonColors(containerColor = TechBlue), shape = RoundedCornerShape(12.dp)) {
+                    Button(
+                        onClick = { onInstall(module) },
+                        colors = ButtonDefaults.buttonColors(containerColor = TechBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
                         Text("⬇️", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("安装", fontSize = 12.sp, color = Color.White)

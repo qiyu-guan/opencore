@@ -61,9 +61,6 @@ object OpenCoreEngine {
         )
     }
 
-    /**
-     * 获取归一化 CPU 负载（0-100）
-     */
     private suspend fun getNormalizedCpuLoad(): Int = withContext(Dispatchers.IO) {
         try {
             fun readCpuStat(): Pair<Long, Long>? {
@@ -175,11 +172,3 @@ object OpenCoreEngine {
         return result.out.firstOrNull()?.trim()
     }
 }
-
-    /**
-     * 为电脑修补工具预留的接口
-     * 通过 ADB 调用：adb shell am broadcast -a com.opencore.PATCH_BOOT --ei progress
-     */
-    suspend fun patchBootViaAdb(progressCallback: (Int) -> Unit): Boolean {
-        return patchBootImage(progressCallback)
-    }
