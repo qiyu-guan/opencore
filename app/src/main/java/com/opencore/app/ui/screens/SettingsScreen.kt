@@ -41,6 +41,14 @@ fun SettingsScreen(themeViewModel: ThemeViewModel) {
             Card(shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("关于", fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+        item {
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("应用 Root 授权")
+                    Button(onClick = { /* 导航到 RootGrantScreen */ }) { Text("管理") }
+                }
+            }
+        }
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("OpenCore v13.0")
                     Text("Build: 2026-06-07")

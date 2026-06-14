@@ -111,7 +111,7 @@ fun ModulesScreen() {
         },
         floatingActionButton = {
             if (selectedTab == 0 && !installing) {
-                FloatingActionButton(
+                FloatingActionButton(modifier = Modifier.padding(16.dp))
                     onClick = { zipPickerLauncher.launch("application/zip") },
                     containerColor = TechBlue,
                     shape = androidx.compose.foundation.shape.CircleShape

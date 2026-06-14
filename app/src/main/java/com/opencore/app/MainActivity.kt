@@ -57,6 +57,17 @@ class MainActivity : ComponentActivity() {
         var selectedTab by remember { mutableStateOf(0) }
 
         Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("OpenCore", color = Color.White) },
+                    actions = {
+                        IconButton(onClick = { navController.navigate("settings") }) {
+                            Icon(Icons.Default.Settings, contentDescription = "设置", tint = Color.White)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = TechBlue)
+                )
+            },
             bottomBar = {
                 NavigationBar(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -84,16 +95,6 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                     }
-                }
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate("settings") },
-                    containerColor = TechBlue,
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    modifier = Modifier.padding(end = 16.dp, top = 16.dp)
-                ) {
-                    Icon(Icons.Default.Settings, contentDescription = "设置", tint = Color.White)
                 }
             }
         ) { innerPadding ->

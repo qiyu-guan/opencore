@@ -175,3 +175,11 @@ object OpenCoreEngine {
         return result.out.firstOrNull()?.trim()
     }
 }
+
+    /**
+     * 为电脑修补工具预留的接口
+     * 通过 ADB 调用：adb shell am broadcast -a com.opencore.PATCH_BOOT --ei progress
+     */
+    suspend fun patchBootViaAdb(progressCallback: (Int) -> Unit): Boolean {
+        return patchBootImage(progressCallback)
+    }

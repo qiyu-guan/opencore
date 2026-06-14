@@ -95,3 +95,57 @@ object ModuleInstaller {
         }
     }
 }
+
+    /**
+     * 重启设备（需要 Root 权限）
+     */
+    suspend fun rebootDevice(onProgress: (String) -> Unit): Boolean {
+        if (!RootManager.isRooted()) {
+            onProgress("需要 Root 权限才能重启")
+            return false
+        }
+        return withContext(Dispatchers.IO) {
+            try {
+                onProgress("正在重启设备...")
+                // 延迟1秒确保 Toast 显示
+                delay(1000)
+                val result = RootManager.execRoot("reboot")
+                if (result.isSuccess) {
+                    onProgress("设备正在重启")
+                    true
+                } else {
+                    onProgress("重启失败: ${result.err.joinToString()}")
+                    false
+                }
+            } catch (e: Exception) {
+                onProgress("重启异常: ${e.message}")
+                false
+            }
+        }
+    }
+    
+    /**
+     * 软重启（只重启 SystemUI，更快）
+     */
+    suspend fun softReboot(onProgress: (String) -> Unit): Boolean {
+        if (!RootManager.isRooted()) {
+            onProgress("需要 Root 权限")
+            return false
+        }
+        return withContext(Dispatchers.IO) {
+            try {
+                onProgress("正在软重启...")
+                val result = RootManager.execRoot("pkill -f com.android.systemui")
+                if (result.isSuccess) {
+                    onProgress("SystemUI 已重启")
+                    true
+                } else {
+                    onProgress("软重启失败，尝试硬重启")
+                    rebootDevice(onProgress)
+                }
+            } catch (e: Exception) {
+                onProgress("软重启异常: ${e.message}")
+                false
+            }
+        }
+    }
