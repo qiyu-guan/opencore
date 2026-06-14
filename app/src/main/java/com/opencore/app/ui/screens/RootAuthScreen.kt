@@ -1,7 +1,11 @@
 package com.opencore.app.ui.screens
 
-import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.AsyncTask
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,13 +27,29 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.widget.Toast
 import java.io.File
+import android.content.pm.PackageManager
 
 data class AppAuthInfo(
     val packageName: String,
     val appName: String,
     val isGranted: Boolean,
-    val icon: android.graphics.drawable.Drawable?
+    val iconBitmap: Bitmap?
 )
+
+fun drawableToBitmap(drawable: Drawable): Bitmap {
+    if (drawable is BitmapDrawable) {
+        return drawable.bitmap
+    }
+    val bitmap = Bitmap.createBitmap(
+        drawable.intrinsicWidth,
+        drawable.intrinsicHeight,
+        Bitmap.Config.ARGB_8888
+    )
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,7 +60,6 @@ fun RootAuthScreen() {
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // 加载应用列表
     LaunchedEffect(Unit) {
         isLoading = true
         withContext(Dispatchers.IO) {
@@ -51,18 +71,18 @@ fun RootAuthScreen() {
                     val appInfo = pm.getApplicationInfo(pkg.packageName, 0)
                     val appName = pm.getApplicationLabel(appInfo).toString()
                     val isGranted = checkRootGranted(pkg.packageName)
-                    val icon = pm.getApplicationIcon(appInfo)
+                    val icon = try {
+                        val drawable = pm.getApplicationIcon(appInfo)
+                        drawableToBitmap(drawable)
+                    } catch (e: Exception) { null }
                     apps.add(AppAuthInfo(pkg.packageName, appName, isGranted, icon))
-                } catch (e: Exception) {
-                    // 忽略无法访问的应用
-                }
+                } catch (e: Exception) { }
             }
             appList = apps.sortedBy { it.appName.lowercase() }
         }
         isLoading = false
     }
 
-    // 过滤应用列表
     val filteredApps = if (searchQuery.isEmpty()) appList else appList.filter {
         it.appName.contains(searchQuery, ignoreCase = true) ||
         it.packageName.contains(searchQuery, ignoreCase = true)
@@ -81,7 +101,6 @@ fun RootAuthScreen() {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // 搜索栏
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
@@ -93,7 +112,6 @@ fun RootAuthScreen() {
                 shape = MaterialTheme.shapes.medium
             )
 
-            // 统计信息
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -121,7 +139,6 @@ fun RootAuthScreen() {
                 }
             }
 
-            // 应用列表
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -144,7 +161,6 @@ fun RootAuthScreen() {
                                         revokeRootPermission(app.packageName)
                                         Toast.makeText(context, "${app.appName} 已撤销 Root 权限", Toast.LENGTH_SHORT).show()
                                     }
-                                    // 刷新状态
                                     appList = appList.map {
                                         if (it.packageName == app.packageName) it.copy(isGranted = newState) else it
                                     }
@@ -182,10 +198,9 @@ fun AppAuthCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 应用图标
-                if (app.icon != null) {
-                    androidx.compose.foundation.Image(
-                        bitmap = app.icon.toComposeBitmap(),
+                if (app.iconBitmap != null) {
+                    Image(
+                        bitmap = app.iconBitmap.asImageBitmap(),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
                     )
@@ -221,16 +236,6 @@ fun AppAuthCard(
     }
 }
 
-// 将 Drawable 转换为 Compose Bitmap（简化版）
-fun android.graphics.drawable.Drawable.toComposeBitmap(): androidx.compose.ui.graphics.ImageBitmap {
-    val bitmap = android.graphics.Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
-    setBounds(0, 0, canvas.width, canvas.height)
-    draw(canvas)
-    return bitmap.asImageBitmap()
-}
-
-// 检查应用是否已获得 Root 权限
 fun checkRootGranted(packageName: String): Boolean {
     return try {
         val suPath = arrayOf(
@@ -253,30 +258,21 @@ fun checkRootGranted(packageName: String): Boolean {
     }
 }
 
-// 授予 Root 权限（写入白名单）
 suspend fun grantRootPermission(packageName: String) {
     withContext(Dispatchers.IO) {
         try {
-            // 方法1：通过 Magisk 的 su 授权
             RootManager.execRoot("magiskpolicy --live \"allow $packageName * * *\" 2>/dev/null")
-            // 方法2：写入 Magisk 白名单
             RootManager.execRoot("echo '$packageName' >> /data/adb/magisk/whitelist 2>/dev/null")
-            // 方法3：创建独立 su 包装
             RootManager.execRoot("echo '#!/system/bin/sh\nexec /system/bin/su -c \"\$@\"' > /data/local/tmp/su_$packageName.sh && chmod 755 /data/local/tmp/su_$packageName.sh")
-        } catch (e: Exception) {
-            // 忽略错误
-        }
+        } catch (e: Exception) { }
     }
 }
 
-// 撤销 Root 权限
 suspend fun revokeRootPermission(packageName: String) {
     withContext(Dispatchers.IO) {
         try {
             RootManager.execRoot("sed -i '/$packageName/d' /data/adb/magisk/whitelist 2>/dev/null")
             RootManager.execRoot("rm -f /data/local/tmp/su_$packageName.sh")
-        } catch (e: Exception) {
-            // 忽略错误
-        }
+        } catch (e: Exception) { }
     }
 }

@@ -27,7 +27,6 @@ import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
 import com.opencore.app.ui.screens.SettingsScreen
 import com.opencore.app.ui.screens.RootAuthScreen
-import com.opencore.app.ui.screens.RootAuthScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
@@ -101,11 +100,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         ) { innerPadding ->
-            NavHost(navController = navController, startDestination = "home", modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.padding(innerPadding)
+            ) {
                 composable("home") { HomeScreen(themeViewModel) }
                 composable("log") { LogScreen() }
                 composable("modules") { ModulesScreen() }
-                composable("settings", navController, navController) { SettingsScreen(themeViewModel) }
+                composable("settings") { SettingsScreen(themeViewModel, navController) }
                 composable("root_auth") { RootAuthScreen() }
             }
         }
