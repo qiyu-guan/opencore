@@ -26,6 +26,7 @@ import com.opencore.app.ui.screens.HomeScreen
 import com.opencore.app.ui.screens.LogScreen
 import com.opencore.app.ui.screens.ModulesScreen
 import com.opencore.app.ui.screens.SettingsScreen
+import com.opencore.app.ui.screens.RootAuthScreen
 import com.opencore.app.ui.theme.OpenCoreTheme
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
@@ -103,7 +104,8 @@ class MainActivity : ComponentActivity() {
                 composable("home") { HomeScreen(themeViewModel) }
                 composable("log") { LogScreen() }
                 composable("modules") { ModulesScreen() }
-                composable("settings") { SettingsScreen(themeViewModel) }
+                composable("settings", navController) { SettingsScreen(themeViewModel) }
+                composable("root_auth") { RootAuthScreen() }
             }
         }
     }
