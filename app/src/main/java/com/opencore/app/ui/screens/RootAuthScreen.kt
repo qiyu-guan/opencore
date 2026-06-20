@@ -27,11 +27,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.widget.Toast
 import java.io.File
+import java.util.regex.Pattern
 
 data class AppInfo(
     val packageName: String,
     val appName: String,
     val isGranted: Boolean,
+    val isGame: Boolean = false,
+    val isBanking: Boolean = false,
     val iconBitmap: Bitmap?
 )
 
@@ -50,6 +53,20 @@ fun drawableToBitmap(drawable: Drawable): Bitmap {
     return bitmap
 }
 
+fun classifyApp(packageName: String, appName: String): Pair<Boolean, Boolean> {
+    // 游戏关键词
+    val gameKeywords = listOf("game", "play", "fun", "娱乐", "game", "gaming", "play", "arcade", "puzzle", "action", "rpg", "shooter")
+    val bankingKeywords = listOf("bank", "pay", "finance", "wallet", "支付宝", "微信支付", "银行", "paypal", "credit", "debit", "card", "payment")
+
+    val lowerPkg = packageName.lowercase()
+    val lowerName = appName.lowercase()
+
+    val isGame = gameKeywords.any { lowerPkg.contains(it) || lowerName.contains(it) }
+    val isBanking = bankingKeywords.any { lowerPkg.contains(it) || lowerName.contains(it) }
+
+    return Pair(isGame, isBanking)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootAuthScreen() {
@@ -59,7 +76,6 @@ fun RootAuthScreen() {
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
 
-    // 加载所有已安装应用（包含系统与第三方）
     LaunchedEffect(Unit) {
         isLoading = true
         withContext(Dispatchers.IO) {
@@ -74,7 +90,8 @@ fun RootAuthScreen() {
                         val drawable = pm.getApplicationIcon(appInfo)
                         drawableToBitmap(drawable)
                     } catch (e: Exception) { null }
-                    apps.add(AppInfo(appInfo.packageName, appName, isGranted, icon))
+                    val (isGame, isBanking) = classifyApp(appInfo.packageName, appName)
+                    apps.add(AppInfo(appInfo.packageName, appName, isGranted, isGame, isBanking, icon))
                 } catch (e: Exception) { /* 忽略无法读取的应用 */ }
             }
             appList = apps.sortedBy { it.appName.lowercase() }
@@ -82,7 +99,6 @@ fun RootAuthScreen() {
         isLoading = false
     }
 
-    // 搜索过滤：同时匹配应用名和包名
     val filteredApps = if (searchQuery.isEmpty()) {
         appList
     } else {
@@ -146,7 +162,6 @@ fun RootAuthScreen() {
                 }
             }
 
-            // 列表或空状态指引
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -229,12 +244,26 @@ fun AppAuthCard(
                     Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(40.dp))
                 }
                 Column {
-                    Text(
-                        text = app.appName,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (app.isGranted) Color(0xFF2563EB) else MaterialTheme.colorScheme.onBackground
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = app.appName,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (app.isGranted) Color(0xFF2563EB) else MaterialTheme.colorScheme.onBackground
+                        )
+                        if (app.isGame) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF6A1B9A).copy(alpha = 0.2f)) {
+                                Text("🎮", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                            }
+                        }
+                        if (app.isBanking) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE65100).copy(alpha = 0.2f)) {
+                                Text("🏦", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
+                            }
+                        }
+                    }
                     Text(
                         text = app.packageName,
                         fontSize = 11.sp,
@@ -255,7 +284,6 @@ fun AppAuthCard(
     }
 }
 
-// 以下为权限操作辅助函数（保持不变）
 fun checkRootGranted(packageName: String): Boolean {
     return try {
         val suPath = arrayOf(

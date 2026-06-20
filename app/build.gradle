@@ -11,8 +11,8 @@ android {
         applicationId "com.opencore.app"
         minSdk 26
         targetSdk 34
-        versionCode 190
-        versionName "19.0"
+        versionCode 221
+        versionName "22.1"
         externalNativeBuild {
             cmake {
                 cppFlags ""
@@ -68,6 +68,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0'
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
     implementation 'androidx.documentfile:documentfile:1.0.1'
+    // 颜色选择器
+    implementation 'com.github.skydoves:colorpickerview:2.3.0'
     
     debugImplementation 'androidx.compose.ui:ui-tooling'
 }

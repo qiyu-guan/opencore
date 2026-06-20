@@ -8,30 +8,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = TechBlue,
-    onPrimary = Color.White,
-    background = DarkBg,
-    surface = DarkSurface,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = TechBlue,
-    onPrimary = Color.White,
-    background = LightBg,
-    surface = LightSurface,
-    onBackground = Color(0xFF1E293B),
-    onSurface = Color(0xFF1E293B)
-)
-
 @Composable
 fun OpenCoreTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    primaryColor: Color = DefaultPrimary,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = primaryColor,
+            onPrimary = DefaultOnPrimary,
+            background = DarkBg,
+            surface = DarkSurface,
+            onBackground = TextPrimary,
+            onSurface = TextPrimary
+        )
+    } else {
+        lightColorScheme(
+            primary = primaryColor,
+            onPrimary = DefaultOnPrimary,
+            background = LightBg,
+            surface = LightSurface,
+            onBackground = Color(0xFF1E293B),
+            onSurface = Color(0xFF1E293B)
+        )
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

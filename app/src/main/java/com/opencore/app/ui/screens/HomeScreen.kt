@@ -1,5 +1,4 @@
 package com.opencore.app.ui.screens
-import kotlinx.coroutines.delay
 
 import android.widget.Toast
 import androidx.compose.animation.core.*
@@ -24,6 +23,7 @@ import com.opencore.app.engine.OpenCoreEngine
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
 import com.opencore.app.utils.RootManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -36,7 +36,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
     var isPatching by remember { mutableStateOf(false) }
     var showRootDialog by remember { mutableStateOf(!RootManager.isRooted()) }
 
-    // 引导用户授予 Root 权限
+    // Root 引导
     if (showRootDialog) {
         AlertDialog(
             onDismissRequest = { showRootDialog = false },
@@ -44,7 +44,6 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
             text = { Text("OpenCore 需要 Root 权限才能完整运行，请授予权限。") },
             confirmButton = {
                 TextButton(onClick = {
-                    // 尝试请求 Root（实际由 RootManager 处理）
                     val activity = context as? androidx.activity.ComponentActivity
                     if (activity != null) {
                         RootManager.requestRootPermission(activity) { granted ->
@@ -69,6 +68,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
         )
     }
 
+    // 启动引擎监控（确保动态更新）
     LaunchedEffect(Unit) {
         OpenCoreEngine.startMonitoring()
     }
@@ -87,7 +87,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
     ) {
         Text("OpenCore 控制中心", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(4.dp))
-        Text("v19.0 | 已启用 ${engineStatus.enabledFeaturesCount}/${engineStatus.totalFeatures} 项特性", fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+        Text("v22.1 | 已启用 ${engineStatus.enabledFeaturesCount}/${engineStatus.totalFeatures} 项特性", fontSize = 12.sp, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
         Spacer(modifier = Modifier.height(8.dp))
 
         if (!RootManager.isRooted()) {
@@ -101,6 +101,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
             Spacer(modifier = Modifier.height(12.dp))
         }
 
+        // 动态负载指示（动画）
         AnimatedLoadIndicator(engineStatus.cpuLoad)
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -121,7 +122,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Boot 镜像管理卡片（类似 Magisk 修补逻辑）
+        // Boot 镜像管理
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Boot 镜像管理", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
@@ -130,7 +131,6 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
                 InfoRow("镜像状态", engineStatus.bootStatus, if (engineStatus.bootStatus == "已修补") Color(0xFF10B981) else Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
                 if (isPatching) {
-                    // 修复进度条动画
                     LinearProgressIndicator(progress = { patchProgress.toFloat() / 100f }, modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)), color = TechBlue)
                     Text("修补进度: $patchProgress%", fontSize = 11.sp, color = TechBlue, modifier = Modifier.padding(top = 4.dp))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -140,12 +140,10 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
                         scope.launch {
                             isPatching = true
                             patchProgress = 0
-                            // 模拟 Magisk 修补流程（实际可调用 magiskboot 或 dd）
                             for (i in 0..10) {
                                 patchProgress = i * 10
                                 delay(300)
                             }
-                            // 执行修补命令
                             val success = OpenCoreEngine.patchBootImage { progress ->
                                 patchProgress = progress
                             }
@@ -166,7 +164,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 新增：手动备份字库入口
+        // 字库备份入口
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("字库与分区备份", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
@@ -186,7 +184,7 @@ fun HomeScreen(themeViewModel: ThemeViewModel, navController: NavController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("OpenCore v19.0 | 稳定版", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.fillMaxWidth())
+        Text("OpenCore v22.1 | 稳定版", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.fillMaxWidth())
     }
 }
 

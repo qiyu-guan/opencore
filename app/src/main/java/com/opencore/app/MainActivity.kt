@@ -41,7 +41,10 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val themeViewModel: ThemeViewModel = viewModel(factory = ThemeViewModelFactory(applicationContext))
-            OpenCoreTheme(darkTheme = themeViewModel.isDarkTheme.value) {
+            OpenCoreTheme(
+                darkTheme = themeViewModel.isDarkTheme.value,
+                primaryColor = themeViewModel.primaryColor.value
+            ) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     AppNavigation(themeViewModel)
                 }
@@ -57,7 +60,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("OpenCore v19.0", color = Color.White) },
+                    title = { Text("OpenCore v22.1", color = Color.White) },
                     actions = {
                         IconButton(onClick = { navController.navigate("settings") }) {
                             Icon(Icons.Default.Settings, contentDescription = "设置", tint = Color.White)

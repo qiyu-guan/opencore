@@ -1,0 +1,86 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    
+    <!-- 背景 -->
+    <path
+        android:fillColor="#0a1f0a"
+        android:pathData="M15,15 L85,15 Q97,15 97,27 L97,73 Q97,85 85,85 L15,85 Q3,85 3,73 L3,27 Q3,15 15,15 Z" />
+    
+    <!-- 裂缝 -->
+    <path
+        android:strokeColor="#e0f0e0"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M48,20 L52,35 L47,50 L53,65 L50,80" />
+    
+    <!-- 左根1 -->
+    <path
+        android:strokeColor="#4caf50"
+        android:strokeWidth="2.2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M25,30 Q35,40 48,42" />
+    
+    <!-- 左根2 -->
+    <path
+        android:strokeColor="#66bb6a"
+        android:strokeWidth="2.2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M22,50 Q35,55 47,52" />
+    
+    <!-- 左根3 -->
+    <path
+        android:strokeColor="#4caf50"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M28,70 Q38,73 48,65" />
+    
+    <!-- 右根1 -->
+    <path
+        android:strokeColor="#81c784"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M75,32 Q65,40 52,43" />
+    
+    <!-- 右根2 -->
+    <path
+        android:strokeColor="#4caf50"
+        android:strokeWidth="2.2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M78,52 Q65,55 52,53" />
+    
+    <!-- 右根3 -->
+    <path
+        android:strokeColor="#66bb6a"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M72,68 Q60,73 52,64" />
+    
+    <!-- 光点 -->
+    <path
+        android:fillColor="#a5d6a7"
+        android:pathData="M47.5,40.5 A1.5,1.5 0 1,0 50.5,40.5 A1.5,1.5 0 1,0 47.5,40.5 Z" />
+    <path
+        android:fillColor="#a5d6a7"
+        android:pathData="M46.5,51.5 A1.5,1.5 0 1,0 49.5,51.5 A1.5,1.5 0 1,0 46.5,51.5 Z" />
+    <path
+        android:fillColor="#a5d6a7"
+        android:pathData="M47.5,62.5 A1.5,1.5 0 1,0 50.5,62.5 A1.5,1.5 0 1,0 47.5,62.5 Z" />
+    
+    <!-- # 符号 -->
+    <path
+        android:fillColor="#4caf50"
+        android:pathData="M39,89 L45,89 M42,86 L42,92 M37,89 L41,89 M44,89 L47,89"
+        android:strokeWidth="0"
+        android:strokeColor="#4caf50" />
+</vector>
