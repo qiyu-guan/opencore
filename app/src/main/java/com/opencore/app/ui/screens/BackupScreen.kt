@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.utils.RootManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,12 +40,10 @@ fun BackupScreen() {
     LaunchedEffect(Unit) {
         isLoading = true
         withContext(Dispatchers.IO) {
-            // 获取所有分区
             val result = RootManager.execRoot("ls /dev/block/by-name/ 2>/dev/null")
             if (result.isSuccess) {
                 partitions = result.out.filter { it.isNotBlank() }
             }
-            // 如果没有 by-name，尝试从 /dev/block/ 获取
             if (partitions.isEmpty()) {
                 val result2 = RootManager.execRoot("ls /dev/block/platform/*/by-name/ 2>/dev/null")
                 if (result2.isSuccess) {
@@ -86,7 +87,6 @@ fun BackupScreen() {
                     Text("未找到任何分区，请确保已 Root 并拥有 /dev/block 访问权限", fontSize = 14.sp, color = Color.Gray)
                 }
             } else {
-                // 全选/取消全选
                 Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text("共 ${partitions.size} 个分区", fontSize = 12.sp, color = Color.Gray)
                     TextButton(onClick = {
@@ -159,7 +159,6 @@ fun BackupScreen() {
                             val dir = File(outputDir)
                             if (!dir.exists()) dir.mkdirs()
                             for (partition in selectedPartitions) {
-                                // 执行 dd 备份
                                 val result = RootManager.execRoot("dd if=/dev/block/by-name/$partition of=$outputDir/${partition}.img")
                                 current++
                                 backupProgress = (current * 100 / total)
