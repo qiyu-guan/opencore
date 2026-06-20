@@ -1,8 +1,9 @@
 package com.opencore.app.ui.theme
 
 import android.content.Context
+import android.graphics.Color
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
@@ -14,7 +15,7 @@ class ThemeViewModel(private val context: Context) : ViewModel() {
         val prefs = context.getSharedPreferences("opencore_prefs", Context.MODE_PRIVATE)
         isDarkTheme.value = prefs.getBoolean("dark_theme", true)
         val colorHex = prefs.getString("primary_color", "#FFB6C1") ?: "#FFB6C1"
-        primaryColor.value = Color(android.graphics.Color.parseColor(colorHex))
+        primaryColor.value = ComposeColor(Color.parseColor(colorHex))
     }
 
     fun toggleTheme() {
@@ -23,7 +24,7 @@ class ThemeViewModel(private val context: Context) : ViewModel() {
             .putBoolean("dark_theme", isDarkTheme.value).apply()
     }
 
-    fun setPrimaryColor(color: Color) {
+    fun setPrimaryColor(color: ComposeColor) {
         primaryColor.value = color
         val hex = String.format("#%06X", (0xFFFFFF and color.toArgb()))
         context.getSharedPreferences("opencore_prefs", Context.MODE_PRIVATE).edit()

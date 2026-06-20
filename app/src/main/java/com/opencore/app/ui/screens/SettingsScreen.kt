@@ -68,7 +68,7 @@ fun SettingsScreen(themeViewModel: ThemeViewModel, navController: NavController)
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         PresetColors.forEach { (name, color) ->
-                            val isSelected = color.toArgb() == themeViewModel.primaryColor.value.toArgb()
+                            val isSelected = color == themeViewModel.primaryColor.value
                             Surface(
                                 modifier = Modifier.size(40.dp),
                                 shape = RoundedCornerShape(50),
@@ -148,7 +148,6 @@ fun SettingsScreen(themeViewModel: ThemeViewModel, navController: NavController)
         item {
             Card(shape = RoundedCornerShape(16.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // 工作室图标
                     Image(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_studio),
                         contentDescription = "工作室图标",

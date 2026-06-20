@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -253,13 +254,13 @@ fun AppAuthCard(
                         )
                         if (app.isGame) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFF6A1B9A).copy(alpha = 0.2f)) {
+                            Surface(shape = MaterialTheme.shapes.small, color = Color(0xFF6A1B9A).copy(alpha = 0.2f)) {
                                 Text("🎮", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
                             }
                         }
                         if (app.isBanking) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFE65100).copy(alpha = 0.2f)) {
+                            Surface(shape = MaterialTheme.shapes.small, color = Color(0xFFE65100).copy(alpha = 0.2f)) {
                                 Text("🏦", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp))
                             }
                         }
