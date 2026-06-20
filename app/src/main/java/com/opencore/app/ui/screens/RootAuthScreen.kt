@@ -1,10 +1,10 @@
 package com.opencore.app.ui.screens
 
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.AsyncTask
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,9 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.widget.Toast
 import java.io.File
-import android.content.pm.PackageManager
 
-data class AppAuthInfo(
+data class AppInfo(
     val packageName: String,
     val appName: String,
     val isGranted: Boolean,
@@ -56,36 +55,41 @@ fun drawableToBitmap(drawable: Drawable): Bitmap {
 fun RootAuthScreen() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var appList by remember { mutableStateOf<List<AppAuthInfo>>(emptyList()) }
+    var appList by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var searchQuery by remember { mutableStateOf("") }
 
+    // 加载所有已安装应用（包含系统与第三方）
     LaunchedEffect(Unit) {
         isLoading = true
         withContext(Dispatchers.IO) {
             val pm = context.packageManager
-            val packages = pm.getInstalledPackages(PackageManager.GET_PERMISSIONS)
-            val apps = mutableListOf<AppAuthInfo>()
-            for (pkg in packages) {
+            val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            val apps = mutableListOf<AppInfo>()
+            for (appInfo in packages) {
                 try {
-                    val appInfo = pm.getApplicationInfo(pkg.packageName, 0)
                     val appName = pm.getApplicationLabel(appInfo).toString()
-                    val isGranted = checkRootGranted(pkg.packageName)
+                    val isGranted = checkRootGranted(appInfo.packageName)
                     val icon = try {
                         val drawable = pm.getApplicationIcon(appInfo)
                         drawableToBitmap(drawable)
                     } catch (e: Exception) { null }
-                    apps.add(AppAuthInfo(pkg.packageName, appName, isGranted, icon))
-                } catch (e: Exception) { }
+                    apps.add(AppInfo(appInfo.packageName, appName, isGranted, icon))
+                } catch (e: Exception) { /* 忽略无法读取的应用 */ }
             }
             appList = apps.sortedBy { it.appName.lowercase() }
         }
         isLoading = false
     }
 
-    val filteredApps = if (searchQuery.isEmpty()) appList else appList.filter {
-        it.appName.contains(searchQuery, ignoreCase = true) ||
-        it.packageName.contains(searchQuery, ignoreCase = true)
+    // 搜索过滤：同时匹配应用名和包名
+    val filteredApps = if (searchQuery.isEmpty()) {
+        appList
+    } else {
+        appList.filter {
+            it.appName.contains(searchQuery, ignoreCase = true) ||
+            it.packageName.contains(searchQuery, ignoreCase = true)
+        }
     }
 
     Scaffold(
@@ -104,14 +108,17 @@ fun RootAuthScreen() {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("搜索应用") },
+                placeholder = { Text("搜索应用或包名") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                enabled = !isLoading,
+                singleLine = true
             )
 
+            // 统计信息
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,9 +146,22 @@ fun RootAuthScreen() {
                 }
             }
 
+            // 列表或空状态指引
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
+                }
+            } else if (filteredApps.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.SearchOff, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("未找到匹配的应用", fontSize = 16.sp, color = Color.Gray)
+                        Text("请检查输入或确认应用已安装", fontSize = 12.sp, color = Color.Gray)
+                    }
                 }
             } else {
                 LazyColumn(
@@ -161,6 +181,7 @@ fun RootAuthScreen() {
                                         revokeRootPermission(app.packageName)
                                         Toast.makeText(context, "${app.appName} 已撤销 Root 权限", Toast.LENGTH_SHORT).show()
                                     }
+                                    // 刷新状态
                                     appList = appList.map {
                                         if (it.packageName == app.packageName) it.copy(isGranted = newState) else it
                                     }
@@ -176,7 +197,7 @@ fun RootAuthScreen() {
 
 @Composable
 fun AppAuthCard(
-    app: AppAuthInfo,
+    app: AppInfo,
     onToggle: (Boolean) -> Unit
 ) {
     Card(
@@ -207,7 +228,6 @@ fun AppAuthCard(
                 } else {
                     Icon(Icons.Default.Apps, contentDescription = null, modifier = Modifier.size(40.dp))
                 }
-
                 Column {
                     Text(
                         text = app.appName,
@@ -223,7 +243,6 @@ fun AppAuthCard(
                     )
                 }
             }
-
             Switch(
                 checked = app.isGranted,
                 onCheckedChange = onToggle,
@@ -236,6 +255,7 @@ fun AppAuthCard(
     }
 }
 
+// 以下为权限操作辅助函数（保持不变）
 fun checkRootGranted(packageName: String): Boolean {
     return try {
         val suPath = arrayOf(
@@ -264,7 +284,7 @@ suspend fun grantRootPermission(packageName: String) {
             RootManager.execRoot("magiskpolicy --live \"allow $packageName * * *\" 2>/dev/null")
             RootManager.execRoot("echo '$packageName' >> /data/adb/magisk/whitelist 2>/dev/null")
             RootManager.execRoot("echo '#!/system/bin/sh\nexec /system/bin/su -c \"\$@\"' > /data/local/tmp/su_$packageName.sh && chmod 755 /data/local/tmp/su_$packageName.sh")
-        } catch (e: Exception) { }
+        } catch (e: Exception) { /* 忽略 */ }
     }
 }
 
@@ -273,6 +293,6 @@ suspend fun revokeRootPermission(packageName: String) {
         try {
             RootManager.execRoot("sed -i '/$packageName/d' /data/adb/magisk/whitelist 2>/dev/null")
             RootManager.execRoot("rm -f /data/local/tmp/su_$packageName.sh")
-        } catch (e: Exception) { }
+        } catch (e: Exception) { /* 忽略 */ }
     }
 }

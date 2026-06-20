@@ -22,11 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.opencore.app.engine.OpenCoreEngine
 import com.opencore.app.engine.ModuleManager
-import com.opencore.app.ui.screens.HomeScreen
-import com.opencore.app.ui.screens.LogScreen
-import com.opencore.app.ui.screens.ModulesScreen
-import com.opencore.app.ui.screens.SettingsScreen
-import com.opencore.app.ui.screens.RootAuthScreen
+import com.opencore.app.ui.screens.*
 import com.opencore.app.ui.theme.OpenCoreTheme
 import com.opencore.app.ui.theme.TechBlue
 import com.opencore.app.ui.theme.ThemeViewModel
@@ -61,7 +57,7 @@ class MainActivity : ComponentActivity() {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("OpenCore", color = Color.White) },
+                    title = { Text("OpenCore v19.0", color = Color.White) },
                     actions = {
                         IconButton(onClick = { navController.navigate("settings") }) {
                             Icon(Icons.Default.Settings, contentDescription = "设置", tint = Color.White)
@@ -105,11 +101,12 @@ class MainActivity : ComponentActivity() {
                 startDestination = "home",
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable("home") { HomeScreen(themeViewModel) }
+                composable("home") { HomeScreen(themeViewModel, navController) }
                 composable("log") { LogScreen() }
                 composable("modules") { ModulesScreen() }
                 composable("settings") { SettingsScreen(themeViewModel, navController) }
                 composable("root_auth") { RootAuthScreen() }
+                composable("backup") { BackupScreen() }
             }
         }
     }
